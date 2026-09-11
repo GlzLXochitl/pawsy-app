@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-export default function DashboardScreen() {
+export default function Dashboard() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Hola</Text>
+      <Text style={styles.text}>hola haz iniciado sesion</Text>
     </View>
   );
 }
@@ -11,12 +11,12 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 20,
   },
 
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+  text: {
+    color: '#000',
+    fontSize: 24,
   },
 });
