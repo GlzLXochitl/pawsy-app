@@ -20,8 +20,8 @@ export default function SignIn() {
 
   const iniciarSesion = () => {
     if (username === usuarioPrueba.username && password === usuarioPrueba.password) {
-      signIn();
-      router.replace('/dashboard');
+      signIn(); // cambia isLoggedIn a true
+      router.replace('/dashboard'); // manda al Dashboard
     } else {
       setError('Usuario o contraseña incorrectos');
     }
@@ -37,7 +37,6 @@ export default function SignIn() {
     >
       <View style={shared.decorCircleTop} />
       <View style={shared.decorCircleBottom} />
-
       <View style={shared.container}>
         <View style={shared.logoCard}>
           <Image
@@ -57,6 +56,7 @@ export default function SignIn() {
           onChangeText={setUsername}
           autoCapitalize="none"
         />
+
         <TextInput
           style={styles.input}
           placeholder="Contraseña"
@@ -65,6 +65,7 @@ export default function SignIn() {
           value={password}
           onChangeText={setPassword}
         />
+
         {error !== '' && <Text style={styles.error}>{error}</Text>}
 
         <TouchableOpacity style={shared.button} onPress={iniciarSesion}>

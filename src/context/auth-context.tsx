@@ -11,14 +11,11 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: PropsWithChildren) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  const signIn = () => setIsLoggedIn(true);
+  const signOut = () => setIsLoggedIn(false);
+
   return (
-    <AuthContext.Provider
-      value={{
-        isLoggedIn,
-        signIn: () => setIsLoggedIn(true),
-        signOut: () => setIsLoggedIn(false),
-      }}
-    >
+    <AuthContext.Provider value={{ isLoggedIn, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
