@@ -7,8 +7,6 @@ import { shared } from '../../../styles/shared';
 import { styles } from '../../../styles/sign-in';
 import { useAuth } from '../../context/auth-context';
 
-const usuarioPrueba = { username: 'isa', password: '123' };
-
 export default function SignIn() {
   const [fontsLoaded] = useFonts({ Fredoka_700Bold });
   const [username, setUsername] = useState('');
@@ -18,12 +16,39 @@ export default function SignIn() {
 
   if (!fontsLoaded) return null;
 
-  const iniciarSesion = () => {
-    if (username === usuarioPrueba.username && password === usuarioPrueba.password) {
-      signIn(); // cambia isLoggedIn a true
-      router.replace('/dashboard'); // manda al Dashboard
-    } else {
-      setError('Usuario o contraseña incorrectos');
+  // Función asíncrona para consultar a la base de datos vía Node.js
+  const iniciarSesion = async () => {
+    setError('');
+
+    if (!username || !password) {
+      setError('Por favor llena todos los campos');
+      return;
+    }
+
+    try {
+      // Petición al backend en Node.js (puerto 3000)
+      const respuesta = await fetch('http://localhost:3000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+        }),
+      });
+
+      const datos = await respuesta.json();
+
+      if (respuesta.ok) {
+        signIn(); // Cambia el estado global a autenticado
+        router.replace('/dashboard'); // Redirige al Dashboard
+      } else {
+        setError(datos.error || 'Usuario o contraseña incorrectos');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('No se pudo conectar con el servidor');
     }
   };
 
