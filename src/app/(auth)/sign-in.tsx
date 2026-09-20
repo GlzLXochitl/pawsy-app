@@ -9,8 +9,10 @@ import { useAuth } from '../../context/auth-context';
 
 export default function SignIn() {
   const [fontsLoaded] = useFonts({ Fredoka_700Bold });
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  
+  // Variables de estado adaptadas al español (nombre y contraseña/contrasena)
+  const [nombre, setNombre] = useState('');
+  const [contrasena, setContrasena] = useState('');
   const [error, setError] = useState('');
   const { signIn } = useAuth();
 
@@ -20,7 +22,7 @@ export default function SignIn() {
   const iniciarSesion = async () => {
     setError('');
 
-    if (!username || !password) {
+    if (!nombre || !contrasena) {
       setError('Por favor llena todos los campos');
       return;
     }
@@ -33,8 +35,8 @@ export default function SignIn() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          username: username,
-          password: password,
+          nombre: nombre,           // Nombre que corresponde al campo 'nombre' de tu tabla usuario
+          contrasena: contrasena,   // Contraseña enviada en español (sin la 'ñ' para evitar fallos de serialización)
         }),
       });
 
@@ -75,10 +77,10 @@ export default function SignIn() {
 
         <TextInput
           style={styles.input}
-          placeholder="Usuario"
+          placeholder="Nombre"
           placeholderTextColor="#7a7a7a"
-          value={username}
-          onChangeText={setUsername}
+          value={nombre}
+          onChangeText={setNombre}
           autoCapitalize="none"
         />
 
@@ -87,8 +89,8 @@ export default function SignIn() {
           placeholder="Contraseña"
           placeholderTextColor="#7a7a7a"
           secureTextEntry
-          value={password}
-          onChangeText={setPassword}
+          value={contrasena}
+          onChangeText={setContrasena}
         />
 
         {error !== '' && <Text style={styles.error}>{error}</Text>}

@@ -10,17 +10,34 @@ app.use(express.json());
 
 // ENDPOINT 1: Inicio de sesión (para sign-in.tsx)
 app.post('/api/login', (req, res) => {
-  const { nombre, contraseña } = req.body;
+  // Recibimos 'nombre' y 'contrasena' (sin ñ) enviados desde React Native
+  const { nombre, contrasena } = req.body;
+
+  // Debugging en consola de Node.js
+  console.log('Body recibido:', req.body);
+
+  // Validamos que ambos campos existan
+  if (!nombre || !contrasena) {
+    return res.status(400).json({ error: 'Nombre y contraseña incorrectos' });
+  }
+
+  // Consulta apuntando a la columna `contraseña` de MySQL pasando la variable `contrasena`
   const sql = 'SELECT * FROM usuario WHERE nombre = ? AND contraseña = ?';
 
-  conexion.query(sql, [nombre, contraseña], (err, resultados) => {
+  conexion.query(sql, [nombre, contrasena], (err, resultados) => {
     if (err) {
-      console.error(err);
+      console.error('Error en MySQL:', err);
       return res.status(500).json({ error: 'Error en la base de datos' });
     }
 
     if (resultados.length > 0) {
-      res.json({ mensaje: 'Login exitoso', usuario: resultados[0] });
+      const usuario = { ...resultados[0] };
+      delete usuario.contraseña; // Eliminamos la contraseña del objeto retornado
+
+      res.json({ 
+        mensaje: 'Login exitoso', 
+        usuario: usuario 
+      });
     } else {
       res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
     }
@@ -39,11 +56,6 @@ app.post('/api/usuarios', (req, res) => {
     }
     res.json({ mensaje: '¡Usuario registrado correctamente!' });
   });
-});
-
-const PUERTO = process.env.PORT || 3000;
-app.listen(PUERTO, () => {
-  console.log(`Servidor escuchando en http://localhost:${PUERTO}`);
 });
 
 // ENDPOINT: Obtener publicaciones
@@ -71,4 +83,9 @@ app.post('/api/posts', (req, res) => {
     if (err) return res.status(500).json({ error: 'Error al guardar publicación' });
     res.json({ mensaje: 'Post publicado exitosamente' });
   });
+});
+
+const PUERTO = process.env.PORT || 3000;
+app.listen(PUERTO, () => {
+  console.log(`Servidor escuchando en http://localhost:${PUERTO}`);
 });
