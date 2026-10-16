@@ -102,14 +102,14 @@ export default function SignIn() {
             end={{ x: 1, y: 0 }}
             style={shared.buttonGradient}
           >
-            <Text style={shared.buttonText}>Log in</Text>
+            <Text style={shared.buttonText}>Iniciar secion</Text>
           </LinearGradient>
         </TouchableOpacity>
 
         <View style={styles.signupRow}>
-          <Text style={styles.signupText}>Don't have an account? </Text>
+          <Text style={styles.signupText}>no tienes una cuenta </Text>
           <TouchableOpacity onPress={() => router.push('/user_form')}>
-            <Text style={styles.signupLink}>Sign up</Text>
+            <Text style={styles.signupLink}>registrate aqui!</Text>
           </TouchableOpacity>
         </View>
       </View>

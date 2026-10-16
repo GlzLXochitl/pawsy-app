@@ -27,7 +27,7 @@ export default function UserForm() {
       return;
     }
     setError('');
-    router.push('/sign-in');
+    router.push('/user_form2');
   };
 
   return (
@@ -115,7 +115,7 @@ export default function UserForm() {
             end={{ x: 1, y: 0 }}
             style={shared.buttonGradient}
           >
-            <Text style={shared.buttonText}>Registrarse</Text>
+            <Text style={shared.buttonText}>sigiente</Text>
           </LinearGradient>
         </TouchableOpacity>
 
