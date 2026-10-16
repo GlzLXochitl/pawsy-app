@@ -60,6 +60,8 @@ export default function Dashboard() {
     setNewPostVisible(false); // cierra el modal
   };
 
+  const porfilePress = () => {}
+
   return (
     <View style={styles.container}>
       {/* Encabezado */}
@@ -118,7 +120,7 @@ export default function Dashboard() {
         <View style={styles.menuContainer}>
           <View style={styles.menuBox}>
             <Text style={styles.menuTitle}>Menú</Text>
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity onPress={porfilePress} style={styles.menuItem}>
               <Text>Perfil</Text>
             </TouchableOpacity>
             <TouchableOpacity
