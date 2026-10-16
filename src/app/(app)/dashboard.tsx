@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { router } from 'expo-router';
 import { Image, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { styles } from '../../../styles/dashboard';
 import { useAuth } from '../../context/auth-context';
@@ -60,7 +61,10 @@ export default function Dashboard() {
     setNewPostVisible(false); // cierra el modal
   };
 
-  const porfilePress = () => {}
+  const porfilePress = () => {
+    setMenuVisible(false);
+    router.push('/profile');
+  };
 
   return (
     <View style={styles.container}>

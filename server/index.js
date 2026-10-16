@@ -18,11 +18,11 @@ app.post('/api/login', (req, res) => {
 
   // Validamos que ambos campos existan
   if (!nombre || !contrasena) {
-    return res.status(400).json({ error: 'Nombre y contraseña incorrectos' });
+    return res.status(400).json({ error: 'Nombre y contrasena incorrectos' });
   }
 
-  // Consulta apuntando a la columna `contraseña` de MySQL pasando la variable `contrasena`
-  const sql = 'SELECT * FROM usuario WHERE nombre = ? AND contraseña = ?';
+  // Consulta apuntando a la columna `contrasena` de MySQL pasando la variable `contrasena`
+  const sql = 'SELECT * FROM usuario WHERE nombre = ? AND contrasena = ?';
 
   conexion.query(sql, [nombre, contrasena], (err, resultados) => {
     if (err) {
@@ -32,14 +32,14 @@ app.post('/api/login', (req, res) => {
 
     if (resultados.length > 0) {
       const usuario = { ...resultados[0] };
-      delete usuario.contraseña; // Eliminamos la contraseña del objeto retornado
+      delete usuario.contrasena; // Eliminamos la contrasena del objeto retornado
 
       res.json({ 
         mensaje: 'Login exitoso', 
         usuario: usuario 
       });
     } else {
-      res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
+      res.status(401).json({ error: 'Usuario o contrasena incorrectos' });
     }
   });
 });
@@ -47,7 +47,7 @@ app.post('/api/login', (req, res) => {
 // ENDPOINT 2: Registro de usuario (para user_form.tsx)
 app.post('/api/usuarios', (req, res) => {
   const { username, password, email } = req.body;
-  const sql = 'INSERT INTO usuarios (username, password, email) VALUES (?, ?, ?)';
+  const sql = 'INSERT INTO usuario (username, password, email) VALUES (?, ?, ?)';
 
   conexion.query(sql, [username, password, email], (err, resultado) => {
     if (err) {

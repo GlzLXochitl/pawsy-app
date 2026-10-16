@@ -1,5 +1,6 @@
 import { Redirect, Stack } from 'expo-router';
 import { useAuth } from '../../context/auth-context';
+import { ProfileProvider } from './profile/ProfileContext';
 
 export default function AppLayout() {
   const { isLoggedIn } = useAuth();
@@ -8,5 +9,9 @@ export default function AppLayout() {
     return <Redirect href="/sign-in" />;
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <ProfileProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </ProfileProvider>
+  );
 }
