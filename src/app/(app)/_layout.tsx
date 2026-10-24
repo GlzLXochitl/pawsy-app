@@ -1,6 +1,6 @@
 import { Redirect, Stack } from 'expo-router';
 import { useAuth } from '../../context/auth-context';
-import { ProfileProvider } from './profile/ProfileContext';
+import { ProfileProvider } from '../../context/ProfileContext';
 
 export default function AppLayout() {
   const { isLoggedIn } = useAuth();

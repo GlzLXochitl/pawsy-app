@@ -1,6 +1,13 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 30,
+    paddingVertical: 24,
+  },
   input: {
     width: '100%',
     height: 52,
@@ -8,6 +15,23 @@ export const styles = StyleSheet.create({
     borderRadius: 26,
     paddingHorizontal: 20,
     marginBottom: 14,
+    color: '#333',
+    fontSize: 15,
+  },
+  passwordInputContainer: {
+    width: '100%',
+    height: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderRadius: 26,
+    paddingHorizontal: 20,
+    marginBottom: 14,
+  },
+  passwordInput: {
+    flex: 1,
+    height: '100%',
+    padding: 0,
     color: '#333',
     fontSize: 15,
   },

@@ -1,18 +1,29 @@
 import { Fredoka_700Bold, useFonts } from '@expo-google-fonts/fredoka';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { shared } from '../../../styles/shared';
 import { styles } from '../../../styles/sign-in';
+import { API_BASE_URL } from '../../config/api';
 import { useAuth } from '../../context/auth-context';
 
 export default function SignIn() {
   const [fontsLoaded] = useFonts({ Fredoka_700Bold });
   
-  // Variables de estado adaptadas al español (nombre y contraseña/contrasena)
-  const [nombre, setNombre] = useState('');
+  const [nombreUsuario, setNombreUsuario] = useState('');
   const [contrasena, setContrasena] = useState('');
+  const [mostrarContrasena, setMostrarContrasena] = useState(false);
   const [error, setError] = useState('');
   const { signIn } = useAuth();
 
@@ -22,21 +33,20 @@ export default function SignIn() {
   const iniciarSesion = async () => {
     setError('');
 
-    if (!nombre || !contrasena) {
+    if (!nombreUsuario.trim() || !contrasena) {
       setError('Por favor llena todos los campos');
       return;
     }
 
     try {
-      // Petición al backend en Node.js (puerto 3000)
-      const respuesta = await fetch('http://localhost:3000/api/login', {
+      const respuesta = await fetch(`${API_BASE_URL}/api/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          nombre: nombre,           // Nombre que corresponde al campo 'nombre' de tu tabla usuario
-          contrasena: contrasena,   // Contraseña enviada en español (sin la 'ñ' para evitar fallos de serialización)
+          nombre_usuario: nombreUsuario.trim(),
+          contrasena,
         }),
       });
 
@@ -44,7 +54,7 @@ export default function SignIn() {
 
       if (respuesta.ok) {
         signIn(); // Cambia el estado global a autenticado
-        router.replace('/dashboard'); // Redirige al Dashboard
+        router.replace('/dashboard'); // Redirige  al Dashboard
       } else {
         setError(datos.error || 'Usuario o contraseña incorrectos');
       }
@@ -64,55 +74,80 @@ export default function SignIn() {
     >
       <View style={shared.decorCircleTop} />
       <View style={shared.decorCircleBottom} />
-      <View style={shared.container}>
-        <View style={shared.logoCard}>
-          <Image
-            source={require('../../img/pawsy-logo.png')}
-            style={shared.logoImage}
-            resizeMode="contain"
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={shared.logoCard}>
+            <Image
+              source={require('../../img/pawsy-logo.png')}
+              style={shared.logoImage}
+              resizeMode="contain"
+            />
+          </View>
+
+          <Text style={shared.title}>
+            Welcome to{"\n"}Pawsy App!
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Nombre de usuario"
+            placeholderTextColor="#7a7a7a"
+            value={nombreUsuario}
+            onChangeText={setNombreUsuario}
+            autoCapitalize="none"
+            maxLength={30}
           />
-        </View>
 
-        <Text style={shared.title}>Welcome to Pawsy App!</Text>
+          <View style={styles.passwordInputContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Contraseña"
+              placeholderTextColor="#7a7a7a"
+              secureTextEntry={!mostrarContrasena}
+              value={contrasena}
+              onChangeText={setContrasena}
+              maxLength={25}
+            />
+            <TouchableOpacity
+              onPress={() => setMostrarContrasena(!mostrarContrasena)}
+              accessibilityRole="button"
+              accessibilityLabel={mostrarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              hitSlop={8}
+            >
+              <Ionicons
+                name={mostrarContrasena ? 'eye-off-outline' : 'eye-outline'}
+                size={22}
+                color="#7a7a7a"
+              />
+            </TouchableOpacity>
+          </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Nombre"
-          placeholderTextColor="#7a7a7a"
-          value={nombre}
-          onChangeText={setNombre}
-          autoCapitalize="none"
-        />
+          {error !== '' && <Text style={styles.error}>{error}</Text>}
 
-        <TextInput
-          style={styles.input}
-          placeholder="Contraseña"
-          placeholderTextColor="#7a7a7a"
-          secureTextEntry
-          value={contrasena}
-          onChangeText={setContrasena}
-        />
-
-        {error !== '' && <Text style={styles.error}>{error}</Text>}
-
-        <TouchableOpacity style={shared.button} onPress={iniciarSesion}>
-          <LinearGradient
-            colors={['#4FC3E8', '#3A9FD9']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={shared.buttonGradient}
-          >
-            <Text style={shared.buttonText}>Iniciar secion</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        <View style={styles.signupRow}>
-          <Text style={styles.signupText}>no tienes una cuenta </Text>
-          <TouchableOpacity onPress={() => router.push('/user_form')}>
-            <Text style={styles.signupLink}>registrate aqui!</Text>
+          <TouchableOpacity style={shared.button} onPress={iniciarSesion}>
+            <LinearGradient
+              colors={['#4FC3E8', '#3A9FD9']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={shared.buttonGradient}
+            >
+              <Text style={shared.buttonText}>Iniciar sesión</Text>
+            </LinearGradient>
           </TouchableOpacity>
-        </View>
-      </View>
+
+          <View style={styles.signupRow}>
+            <Text style={styles.signupText}>no tienes una cuenta </Text>
+            <TouchableOpacity onPress={() => router.push('/user_form')}>
+              <Text style={styles.signupLink}>registrate aqui!</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </LinearGradient>
   );
 }

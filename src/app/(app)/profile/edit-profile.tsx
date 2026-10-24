@@ -6,7 +6,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { useProfile } from './ProfileContext';
+import { useProfile } from '../../../context/ProfileContext';
 
 export default function EditProfile() {
   const { profile, updateProfile } = useProfile();

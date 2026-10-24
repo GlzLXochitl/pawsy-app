@@ -4,18 +4,21 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#40E0D0',
-    padding: 10,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 12,
   },
   appName: {
+    fontFamily: 'Fredoka_700Bold',
     fontSize: 24,
-    fontWeight: 'bold',
     color: '#fff',
   },
   menuButton: {
@@ -28,12 +31,13 @@ export const styles = StyleSheet.create({
   post: {
     backgroundColor: '#fff',
     borderRadius: 10,
-    padding: 10,
-    marginBottom: 15,
+    padding: 12,
+    marginBottom: 12,
   },
   userName: {
     fontWeight: 'bold',
-    marginBottom: 5,
+    fontSize: 15,
+    marginBottom: 6,
   },
   postImage: {
     width: '100%',
@@ -44,6 +48,8 @@ export const styles = StyleSheet.create({
   postText: {
     marginBottom: 10,
     color: '#333',
+    fontSize: 16,
+    lineHeight: 22,
   },
   actions: {
     flexDirection: 'row',
@@ -54,11 +60,17 @@ export const styles = StyleSheet.create({
   },
   menuContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
+  menuBackdrop: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  },
   menuBox: {
-    backgroundColor: '#f00606',
+    backgroundColor: '#fff',
     padding: 20,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
@@ -67,9 +79,24 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 15,
+    color: '#222',
+  },
+  menuCloseButton: {
+    position: 'absolute',
+    top: 10,
+    right: 12,
+    zIndex: 1,
+    padding: 6,
   },
   menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
     paddingVertical: 10,
+  },
+  menuItemText: {
+    color: '#222',
+    fontSize: 16,
   },
   closeMenu: {
     marginTop: 15,

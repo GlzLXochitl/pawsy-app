@@ -1,91 +1,27 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
-const conexion = require('./db');
-require('dotenv').config();
+const inicioSesionRoutes = require('./routes/inicio-sesion');
+const registroUsuarioRoutes = require('./routes/registro-usuario');
+const dashboardVistaRoutes = require('./routes/dashboard-vista');
+const dashboardPublicacionRoutes = require('./routes/dashboard-publicacion');
+const perfilRoutes = require('./routes/perfil');
+const configuracionesRoutes = require('./routes/configuraciones');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// ENDPOINT 1: Inicio de sesión (para sign-in.tsx)
-app.post('/api/login', (req, res) => {
-  // Recibimos 'nombre' y 'contrasena' (sin ñ) enviados desde React Native
-  const { nombre, contrasena } = req.body;
-
-  // Debugging en consola de Node.js
-  console.log('Body recibido:', req.body);
-
-  // Validamos que ambos campos existan
-  if (!nombre || !contrasena) {
-    return res.status(400).json({ error: 'Nombre y contrasena incorrectos' });
-  }
-
-  // Consulta apuntando a la columna `contrasena` de MySQL pasando la variable `contrasena`
-  const sql = 'SELECT * FROM usuario WHERE nombre = ? AND contrasena = ?';
-
-  conexion.query(sql, [nombre, contrasena], (err, resultados) => {
-    if (err) {
-      console.error('Error en MySQL:', err);
-      return res.status(500).json({ error: 'Error en la base de datos' });
-    }
-
-    if (resultados.length > 0) {
-      const usuario = { ...resultados[0] };
-      delete usuario.contrasena; // Eliminamos la contrasena del objeto retornado
-
-      res.json({ 
-        mensaje: 'Login exitoso', 
-        usuario: usuario 
-      });
-    } else {
-      res.status(401).json({ error: 'Usuario o contrasena incorrectos' });
-    }
-  });
-});
-
-// ENDPOINT 2: Registro de usuario (para user_form.tsx)
-app.post('/api/usuarios', (req, res) => {
-  const { username, password, email } = req.body;
-  const sql = 'INSERT INTO usuario (username, password, email) VALUES (?, ?, ?)';
-
-  conexion.query(sql, [username, password, email], (err, resultado) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Error al registrar el usuario' });
-    }
-    res.json({ mensaje: '¡Usuario registrado correctamente!' });
-  });
-});
-
-// ENDPOINT: Obtener publicaciones
-app.get('/api/posts', (req, res) => {
-  const sql = 'SELECT * FROM posts ORDER BY id DESC';
-  conexion.query(sql, (err, resultados) => {
-    if (err) return res.status(500).json({ error: 'Error al consultar posts' });
-    
-    // Mapeamos los comentarios de string a array para React Native
-    const postsFormateados = resultados.map(post => ({
-      ...post,
-      comments: post.comments ? JSON.parse(post.comments) : []
-    }));
-    
-    res.json(postsFormateados);
-  });
-});
-
-// ENDPOINT: Crear publicación
-app.post('/api/posts', (req, res) => {
-  const { user, text, image } = req.body;
-  const sql = 'INSERT INTO posts (user, text, image, likes, comments) VALUES (?, ?, ?, 0, "[]")';
-  
-  conexion.query(sql, [user, text, image], (err, resultado) => {
-    if (err) return res.status(500).json({ error: 'Error al guardar publicación' });
-    res.json({ mensaje: 'Post publicado exitosamente' });
-  });
-});
+app.use('/api/login', inicioSesionRoutes);
+app.use('/api/usuarios', registroUsuarioRoutes);
+app.use('/api/posts', dashboardVistaRoutes);
+app.use('/api/posts', dashboardPublicacionRoutes);
+app.use('/api/perfil', perfilRoutes);
+app.use('/api/configuraciones', configuracionesRoutes);
 
 const PUERTO = process.env.PORT || 3000;
-app.listen(PUERTO, () => {
-  console.log(`Servidor escuchando en http://localhost:${PUERTO}`);
+app.listen(PUERTO, '0.0.0.0', () => {
+  console.log(`Servidor escuchando en el puerto ${PUERTO}`);
 });

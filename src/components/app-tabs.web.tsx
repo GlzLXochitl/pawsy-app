@@ -1,3 +1,4 @@
+import { forwardRef, type ComponentRef } from 'react';
 import {
   Tabs,
   TabList,
@@ -24,8 +25,8 @@ export default function AppTabs() {
           <TabTrigger name="home" href="/" asChild>
             <TabButton>Home</TabButton>
           </TabTrigger>
-          <TabTrigger name="explore" href="/explore" asChild>
-            <TabButton>Explore</TabButton>
+          <TabTrigger name="dashboard" href="/dashboard" asChild>
+            <TabButton>Dashboard</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>
@@ -33,9 +34,12 @@ export default function AppTabs() {
   );
 }
 
-export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
+export const TabButton = forwardRef<
+  ComponentRef<typeof Pressable>,
+  Omit<TabTriggerSlotProps, 'ref'>
+>(function TabButton({ children, isFocused, ...props }, ref) {
   return (
-    <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
+    <Pressable ref={ref} {...props} style={({ pressed }) => pressed && styles.pressed}>
       <ThemedView
         type={isFocused ? 'backgroundSelected' : 'backgroundElement'}
         style={styles.tabButtonView}>
@@ -45,11 +49,11 @@ export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps
       </ThemedView>
     </Pressable>
   );
-}
+});
 
 export function CustomTabList(props: TabListProps) {
   const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
   return (
     <View {...props} style={styles.tabListContainer}>

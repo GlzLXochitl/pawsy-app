@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { useProfile } from './ProfileContext';
+import { useProfile } from '../../../context/ProfileContext';
 
 export default function Profile() {
   const { profile } = useProfile();
