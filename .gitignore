@@ -39,6 +39,10 @@ yarn-error.*
 
 example
 
+# Uploaded user profile images
+server/resources/profile-images/*
+server/resources/comment-images/*
+
 # generated native folders
 /ios
 /android
