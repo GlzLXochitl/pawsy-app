@@ -2,10 +2,10 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
+  
+
   container: {
     flex: 1,
-    paddingHorizontal: 12,
-    paddingTop: 8,
   },
   safeArea: {
     flex: 1,
@@ -14,124 +14,206 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   appName: {
-    fontFamily: 'Fredoka_700Bold',
-    fontSize: 24,
-    color: '#fff',
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFF',
   },
   menuButton: {
-    padding: 8,
+    padding: 4,
   },
-  menuText: {
-    fontSize: 20,
-    color: '#fff',
+  
+  // NUEVAS CLASES PARA EL DISEÑO TIPO FACEBOOK:
+  postCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginHorizontal: 12,
+    marginBottom: 16,
+    paddingVertical: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  post: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
+  postHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    marginBottom: 8,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
   },
   userName: {
     fontWeight: 'bold',
     fontSize: 15,
-    marginBottom: 6,
+    color: '#333',
+  },
+  postTime: {
+    fontSize: 12,
+    color: '#666',
+  },
+  postText: {
+    paddingHorizontal: 12,
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 8,
   },
   postImage: {
     width: '100%',
-    height: 200,
-    borderRadius: 8,
-    marginBottom: 10,
+    height: 250, // Ajusta la altura para que no se vea gigante
+    resizeMode: 'cover',
   },
-  postText: {
-    marginBottom: 10,
-    color: '#333',
-    fontSize: 16,
-    lineHeight: 22,
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEE',
   },
-  actions: {
+  statsText: {
+    fontSize: 13,
+    color: '#666',
+  },
+  actionButtonsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEE',
   },
-  actionButton: {
-    padding: 5,
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
   },
-  menuContainer: {
+  actionBtnText: {
+    marginLeft: 6,
+    color: '#666',
+    fontWeight: '500',
+  },
+  commentsSection: {
+    paddingHorizontal: 12,
+    paddingTop: 8,
+  },
+  commentBubble: {
+    backgroundColor: '#F0F2F5',
+    padding: 8,
+    borderRadius: 8,
+    marginBottom: 6,
+  },
+  commentUser: {
+    fontWeight: 'bold',
+    fontSize: 12,
+    color: '#333',
+  },
+  commentText: {
+    fontSize: 13,
+    color: '#333',
+  },
+  commentInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  smallAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    marginRight: 8,
+  },
+  commentInput: {
     flex: 1,
-    justifyContent: 'flex-end',
+    backgroundColor: '#F0F2F5',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    height: 38,
+    fontSize: 13,
   },
-  menuBackdrop: {
+  commentButton: {
+    backgroundColor: '#3A9FD9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    height: 38,
+    borderRadius: 19,
+    marginLeft: 8,
+  },
+  
+  // Barra de navegación inferior
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#FFF',
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#DDD',
     position: 'absolute',
-    top: 0,
-    right: 0,
     bottom: 0,
     left: 0,
+    right: 0,
+  },
+  navItem: {
+    alignItems: 'center',
+  },
+  navText: {
+    fontSize: 11,
+    color: '#666',
+    marginTop: 2,
+  },
+  addNavButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#3A9FD9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Modales
+  menuContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   menuBox: {
-    backgroundColor: '#fff',
+    width: '85%',
+    backgroundColor: '#FFF',
+    borderRadius: 12,
     padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
   },
   menuTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 15,
-    color: '#222',
-  },
-  menuCloseButton: {
-    position: 'absolute',
-    top: 10,
-    right: 12,
-    zIndex: 1,
-    padding: 6,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   menuItemText: {
-    color: '#222',
+    marginLeft: 15,
     fontSize: 16,
+    color: '#333',
+  },
+  menuCloseButton: {
+    alignSelf: 'flex-end',
   },
   closeMenu: {
+    alignSelf: 'center',
     marginTop: 15,
-    alignItems: 'center',
   },
-  
-commentsSection: {
-  marginTop: 10,
-},
-commentText: {
-  fontSize: 14,
-  color: '#333',
-  marginBottom: 5,
-},
-commentInputRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginTop: 5,
-},
-commentInput: {
-  flex: 1,
-  borderWidth: 1,
-  borderColor: '#ccc',
-  borderRadius: 5,
-  paddingHorizontal: 8,
-  paddingVertical: 4,
-  marginRight: 5,
-  backgroundColor: '#fff',
-},
-commentButton: {
-  backgroundColor: '#4FC3E8',
-  paddingHorizontal: 10,
-  paddingVertical: 6,
-  borderRadius: 5,
-},
 
+  
 
 });

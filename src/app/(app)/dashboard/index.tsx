@@ -21,13 +21,36 @@ export default function Dashboard() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [newPostVisible, setNewPostVisible] = useState(false);
   const [commentDrafts, setCommentDrafts] = useState<Record<number, string>>({});
+  
   const [posts, setPosts] = useState([
     {
       id: 1,
+      user: 'Carlos Ramírez (Escuela Canina)',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
+      time: 'Hace 30 minutos · 📍 Aguascalientes',
+      text: '¡Hola a todos! 🐕🐾 Ofrezco servicios de escuela para perros y adiestramiento positivo. ¡Ayuda a tu lomito a tener un mejor comportamiento! Contáctame por mensaje.',
+      image: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600',
+      likes: 25,
+      comments: ['¡Me interesa mucho!', '¿Cuáles son tus horarios?'] as string[],
+    },
+    {
+      id: 2,
+      user: 'diego fernando',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+      time: 'Hace 1 hora · 📍 en el ita',
+      text: 'Se perdió un perro pastor alemán, si lo ven avisen por favor.',
+      image: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600',
+      likes: 12,
+      comments: ['lo encontré ayer'] as string[],
+    },
+    {
+      id: 3,
       user: 'Isabel López',
-      text: 'Se perdió ayer en el parque del Santo...',
-      image: 'https://place-puppy.com/300x300',
-      likes: 0,
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
+      time: 'Hace 2 horas · 📍 colonia méxico',
+      text: 'Se perdió ayer en el parque del Santo un perrito chihuahua de color café.',
+      image: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=600',
+      likes: 5,
       comments: [] as string[],
     },
   ]);
@@ -52,19 +75,22 @@ export default function Dashboard() {
   const [newImage, setNewImage] = useState('');
 
   const publishPost = () => {
-    if (newText.trim() === '') return; // no publicar vacío
+    {/* datos para publicar y que aparesca  */}
+    if (newText.trim() === '') return;
     const newPost = {
       id: posts.length + 1,
       user: 'Usuario Actual',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+      time: 'Hace un momento',
       text: newText,
-      image: newImage || 'https://placehold.co/300x300',
+      image: newImage || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600',
       likes: 0,
       comments: [] as string[],
     };
-    setPosts([newPost, ...posts]); // agrega al inicio del feed
+    setPosts([newPost, ...posts]);
     setNewText('');
     setNewImage('');
-    setNewPostVisible(false); // cierra el modal
+    setNewPostVisible(false);
   };
 
   const porfilePress = () => {
@@ -83,36 +109,81 @@ export default function Dashboard() {
       style={styles.container}
     >
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        {/* Encabezado */}
+        {/* Encabezado con tu logo local y PAWSY */}
         <View style={styles.header}>
-          <Text style={styles.appName}>PAWSY</Text>
-          <TouchableOpacity onPress={toggleMenu} style={styles.menuButton}>
-            <Text style={styles.menuText}>☰</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Image 
+             source={require('../../../img/pawsy-logo.png')}
+             style={{ width: 32, height: 32, marginRight: 8, resizeMode: 'contain' }} 
+            />
+            
+            <Text style={styles.appName}>PAWSY</Text>
+          </View>
+          
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity onPress={() => setNewPostVisible(true)} style={{ marginRight: 15 }}>
+              <Ionicons name="notifications-outline" size={24} color="#FFF" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={toggleMenu} style={styles.menuButton}>
+              <Ionicons name="menu" size={24} color="#FFF" />
+            </TouchableOpacity>
+          </View>
         </View>
+        
 
-        {/* Feed */}
-        <ScrollView>
+        
+        <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
           {posts.map(post => (
-            <View key={post.id} style={styles.post}>
-              <Text style={styles.userName}>{post.user}</Text>
-              <Image source={{ uri: post.image }} style={styles.postImage} />
+            <View key={post.id} style={styles.postCard}>
+              <View style={styles.postHeader}>
+                <Image source={{ uri: post.avatar }} style={styles.avatar} />
+                <View>
+                  <Text style={styles.userName}>{post.user}</Text>
+                  <Text style={styles.postTime}>{post.time}</Text>
+                </View>
+              </View>
+
+              {/* Texto de la publicación */}
               <Text style={styles.postText}>{post.text}</Text>
-              <View style={styles.actions}>
-                <TouchableOpacity onPress={() => addLike(post.id)} style={styles.actionButton}>
-                  <Text>❤️ {post.likes}</Text>
+
+              {/* Imagen */}
+              {post.image ? (
+                <Image source={{ uri: post.image }} style={styles.postImage} />
+              ) : null}
+
+              <View style={styles.statsRow}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text>❤️</Text>
+                  <Text style={styles.statsText}> {post.likes}</Text>
+                </View>
+                <Text style={styles.statsText}>{post.comments.length} comentarios</Text>
+              </View>
+
+              <View style={styles.actionButtonsRow}>
+                <TouchableOpacity onPress={() => addLike(post.id)} style={styles.actionBtn}>
+                  <Ionicons name="heart-outline" size={20} color="#666" />
+                  <Text style={styles.actionBtnText}>Me gusta</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionBtn}>
+                  <Ionicons name="chatbubble-outline" size={20} color="#666" />
+                  <Text style={styles.actionBtnText}>Comentar</Text>
                 </TouchableOpacity>
               </View>
 
-              {/* Comentarios */}
               <View style={styles.commentsSection}>
                 {post.comments.map((c, i) => (
-                  <Text key={i} style={styles.commentText}>💬 {c}</Text>
+                  <View key={i} style={styles.commentBubble}>
+                    <Text style={styles.commentUser}>Usuario</Text>
+                    <Text style={styles.commentText}>{c}</Text>
+                  </View>
                 ))}
+
                 <View style={styles.commentInputRow}>
+                  <Image source={{ uri: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100' }} style={styles.smallAvatar} />
                   <TextInput
                     style={styles.commentInput}
                     placeholder="Escribe un comentario..."
+                    placeholderTextColor="#888"
                     value={commentDrafts[post.id] ?? ''}
                     onChangeText={comment => setCommentDrafts(drafts => ({
                       ...drafts,
@@ -126,7 +197,7 @@ export default function Dashboard() {
                       setCommentDrafts(drafts => ({ ...drafts, [post.id]: '' }));
                     }}
                   >
-                    <Text>Enviar</Text>
+                    <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Enviar</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -134,23 +205,33 @@ export default function Dashboard() {
           ))}
         </ScrollView>
 
+        {/* Barra de Navegación */}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(app)/dashboard')}>
+            <Ionicons name="home" size={24} color="#3A9FD9" />
+            <Text style={[styles.navText, { color: '#3A9FD9' }]}>Inicio</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(app)/dashboard')}>
+            <Ionicons name="search-outline" size={24} color="#666" />
+            <Text style={styles.navText}>Buscar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => setNewPostVisible(true)}>
+            <View style={styles.addNavButton}>
+              <Ionicons name="add" size={24} color="#FFF" />
+            </View>
+            <Text style={styles.navText}>Crear</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={porfilePress}>
+            <Ionicons name="person-outline" size={24} color="#666" />
+            <Text style={styles.navText}>Perfil</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Menú lateral */}
         <Modal visible={menuVisible} transparent animationType="slide">
           <View style={styles.menuContainer}>
-            <LinearGradient
-              pointerEvents="none"
-              colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.5)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={styles.menuBackdrop}
-            />
             <View style={styles.menuBox}>
-              <TouchableOpacity
-                accessibilityRole="button"
-                accessibilityLabel="Cerrar menú"
-                onPress={toggleMenu}
-                style={styles.menuCloseButton}
-              >
+              <TouchableOpacity onPress={toggleMenu} style={styles.menuCloseButton}>
                 <Ionicons name="close" size={24} color="#555" />
               </TouchableOpacity>
               <Text style={styles.menuTitle}>Menú</Text>
@@ -162,16 +243,13 @@ export default function Dashboard() {
                 style={styles.menuItem}
                 onPress={() => {
                   setMenuVisible(false);
-                  setNewPostVisible(true); // abre modal de publicar
+                  setNewPostVisible(true);
                 }}
               >
                 <Ionicons name="add-circle-outline" size={21} color="#3A9FD9" />
                 <Text style={styles.menuItemText}>Publicar</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={signOut}
-              >
+              <TouchableOpacity style={styles.menuItem} onPress={signOut}>
                 <Ionicons name="log-out-outline" size={21} color="#3A9FD9" />
                 <Text style={styles.menuItemText}>Cerrar sesión</Text>
               </TouchableOpacity>
@@ -183,21 +261,24 @@ export default function Dashboard() {
         <Modal visible={newPostVisible} transparent animationType="fade">
           <View style={styles.menuContainer}>
             <View style={styles.menuBox}>
-              <Text style={styles.menuTitle}>Nuevo Post</Text>
+              <Text style={styles.menuTitle}>Crear Publicación</Text>
               <TextInput
-                style={styles.commentInput}
-                placeholder="Escribe tu publicación..."
+                style={[styles.commentInput, { height: 80, textAlignVertical: 'top' }]}
+                placeholder="¿Qué mascota estás buscando o quieres reportar?"
+                placeholderTextColor="#888"
+                multiline
                 value={newText}
                 onChangeText={setNewText}
               />
               <TextInput
                 style={styles.commentInput}
-                placeholder="URL de imagen (opcional)"
+                placeholder="URL de la imagen (opcional)"
+                placeholderTextColor="#888"
                 value={newImage}
                 onChangeText={setNewImage}
               />
-              <TouchableOpacity style={styles.commentButton} onPress={publishPost}>
-                <Text>Publicar</Text>
+              <TouchableOpacity style={[styles.commentButton, { backgroundColor: '#3A9FD9', padding: 12, alignItems: 'center', borderRadius: 8, marginTop: 10 }]} onPress={publishPost}>
+                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Publicar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.closeMenu} onPress={() => setNewPostVisible(false)}>
                 <Ionicons name="close" size={22} color="#555" />
