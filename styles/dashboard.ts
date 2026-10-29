@@ -26,7 +26,7 @@ export const styles = StyleSheet.create({
     padding: 4,
   },
   
-  // NUEVAS CLASES PARA EL DISEÑO TIPO FACEBOOK:
+  
   postCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
@@ -68,7 +68,7 @@ export const styles = StyleSheet.create({
   },
   postImage: {
     width: '100%',
-    height: 250, // Ajusta la altura para que no se vea gigante
+    height: 250, 
     resizeMode: 'cover',
   },
   statsRow: {
@@ -148,7 +148,7 @@ export const styles = StyleSheet.create({
     marginLeft: 8,
   },
   
-  // Barra de navegación inferior
+  // la barra que esta abajo 
   bottomNav: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -178,7 +178,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // Modales
+  // es lo mismo que el menu 
   menuContainer: {
     flex: 1,
     justifyContent: 'center',

@@ -109,7 +109,7 @@ export default function Dashboard() {
       style={styles.container}
     >
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        {/* Encabezado con tu logo local y PAWSY */}
+        
         <View style={styles.header}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Image 
