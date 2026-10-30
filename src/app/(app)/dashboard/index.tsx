@@ -22,6 +22,8 @@ export default function Dashboard() {
   const [newPostVisible, setNewPostVisible] = useState(false);
   const [commentDrafts, setCommentDrafts] = useState<Record<number, string>>({});
   
+  const [visibleComments, setVisibleComments] = useState<Record<number, boolean>>({});
+
   const [posts, setPosts] = useState([
     {
       id: 1,
@@ -70,12 +72,17 @@ export default function Dashboard() {
     ));
   };
 
-  // Estados para nuevo post
+  const toggleComments = (id: number) => {
+    setVisibleComments(prev => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
   const [newText, setNewText] = useState('');
   const [newImage, setNewImage] = useState('');
 
   const publishPost = () => {
-    {/* datos para publicar y que aparesca  */}
     if (newText.trim() === '') return;
     const newPost = {
       id: posts.length + 1,
@@ -110,14 +117,26 @@ export default function Dashboard() {
     >
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         
+        
         <View style={styles.header}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            backgroundColor: '#FFF', 
+            paddingHorizontal: 12, 
+            paddingVertical: 6, 
+            borderRadius: 14,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 3,
+            elevation: 3
+          }}>
             <Image 
              source={require('../../../img/pawsy-logo.png')}
-             style={{ width: 32, height: 32, marginRight: 8, resizeMode: 'contain' }} 
+             style={{ width: 28, height: 28, marginRight: 6, resizeMode: 'contain' }} 
             />
-            
-            <Text style={styles.appName}>PAWSY</Text>
+            <Text style={[styles.appName, { color: '#3A9FD9' }]}>PAWSY</Text>
           </View>
           
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -129,83 +148,86 @@ export default function Dashboard() {
             </TouchableOpacity>
           </View>
         </View>
-        
 
-        
         <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
-          {posts.map(post => (
-            <View key={post.id} style={styles.postCard}>
-              <View style={styles.postHeader}>
-                <Image source={{ uri: post.avatar }} style={styles.avatar} />
-                <View>
-                  <Text style={styles.userName}>{post.user}</Text>
-                  <Text style={styles.postTime}>{post.time}</Text>
-                </View>
-              </View>
+          {posts.map(post => {
+            const isCommentsOpen = !!visibleComments[post.id];
 
-              {/* Texto de la publicación */}
-              <Text style={styles.postText}>{post.text}</Text>
-
-              {/* Imagen */}
-              {post.image ? (
-                <Image source={{ uri: post.image }} style={styles.postImage} />
-              ) : null}
-
-              <View style={styles.statsRow}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text>❤️</Text>
-                  <Text style={styles.statsText}> {post.likes}</Text>
-                </View>
-                <Text style={styles.statsText}>{post.comments.length} comentarios</Text>
-              </View>
-
-              <View style={styles.actionButtonsRow}>
-                <TouchableOpacity onPress={() => addLike(post.id)} style={styles.actionBtn}>
-                  <Ionicons name="heart-outline" size={20} color="#666" />
-                  <Text style={styles.actionBtnText}>Me gusta</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn}>
-                  <Ionicons name="chatbubble-outline" size={20} color="#666" />
-                  <Text style={styles.actionBtnText}>Comentar</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.commentsSection}>
-                {post.comments.map((c, i) => (
-                  <View key={i} style={styles.commentBubble}>
-                    <Text style={styles.commentUser}>Usuario</Text>
-                    <Text style={styles.commentText}>{c}</Text>
+            return (
+              <View key={post.id} style={styles.postCard}>
+                <View style={styles.postHeader}>
+                  <Image source={{ uri: post.avatar }} style={styles.avatar} />
+                  <View>
+                    <Text style={styles.userName}>{post.user}</Text>
+                    <Text style={styles.postTime}>{post.time}</Text>
                   </View>
-                ))}
+                </View>
 
-                <View style={styles.commentInputRow}>
-                  <Image source={{ uri: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100' }} style={styles.smallAvatar} />
-                  <TextInput
-                    style={styles.commentInput}
-                    placeholder="Escribe un comentario..."
-                    placeholderTextColor="#888"
-                    value={commentDrafts[post.id] ?? ''}
-                    onChangeText={comment => setCommentDrafts(drafts => ({
-                      ...drafts,
-                      [post.id]: comment,
-                    }))}
-                  />
-                  <TouchableOpacity
-                    style={styles.commentButton}
-                    onPress={() => {
-                      addComment(post.id, commentDrafts[post.id] ?? '');
-                      setCommentDrafts(drafts => ({ ...drafts, [post.id]: '' }));
-                    }}
-                  >
-                    <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Enviar</Text>
+                <Text style={styles.postText}>{post.text}</Text>
+
+                {post.image ? (
+                  <Image source={{ uri: post.image }} style={styles.postImage} />
+                ) : null}
+
+                <View style={styles.statsRow}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text>❤️</Text>
+                    <Text style={styles.statsText}> {post.likes}</Text>
+                  </View>
+                  <Text style={styles.statsText}>{post.comments.length} comentarios</Text>
+                </View>
+
+                <View style={styles.actionButtonsRow}>
+                  <TouchableOpacity onPress={() => addLike(post.id)} style={styles.actionBtn}>
+                    <Ionicons name="heart-outline" size={20} color="#666" />
+                    <Text style={styles.actionBtnText}>Me gusta</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity onPress={() => toggleComments(post.id)} style={styles.actionBtn}>
+                    <Ionicons name="chatbubble-outline" size={20} color="#666" />
+                    <Text style={styles.actionBtnText}>Comentar</Text>
                   </TouchableOpacity>
                 </View>
+
+                {isCommentsOpen && (
+                  <View style={styles.commentsSection}>
+                    {post.comments.map((c, i) => (
+                      <View key={i} style={styles.commentBubble}>
+                        <Text style={styles.commentUser}>Usuario</Text>
+                        <Text style={styles.commentText}>{c}</Text>
+                      </View>
+                    ))}
+
+                    <View style={styles.commentInputRow}>
+                      <Image source={{ uri: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100' }} style={styles.smallAvatar} />
+                      <TextInput
+                        style={styles.commentInput}
+                        placeholder="Escribe un comentario..."
+                        placeholderTextColor="#888"
+                        value={commentDrafts[post.id] ?? ''}
+                        onChangeText={comment => setCommentDrafts(drafts => ({
+                          ...drafts,
+                          [post.id]: comment,
+                        }))}
+                      />
+                      <TouchableOpacity
+                        style={styles.commentButton}
+                        onPress={() => {
+                          addComment(post.id, commentDrafts[post.id] ?? '');
+                          setCommentDrafts(drafts => ({ ...drafts, [post.id]: '' }));
+                        }}
+                      >
+                        <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Enviar</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
               </View>
-            </View>
-          ))}
+            );
+          })}
         </ScrollView>
 
-        {/* Barra de Navegación */}
+        
         <View style={styles.bottomNav}>
           <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(app)/dashboard')}>
             <Ionicons name="home" size={24} color="#3A9FD9" />
@@ -227,7 +249,7 @@ export default function Dashboard() {
           </TouchableOpacity>
         </View>
 
-        {/* Menú lateral */}
+        
         <Modal visible={menuVisible} transparent animationType="slide">
           <View style={styles.menuContainer}>
             <View style={styles.menuBox}>
@@ -257,32 +279,47 @@ export default function Dashboard() {
           </View>
         </Modal>
 
-        {/* Modal de nuevo post */}
+        
         <Modal visible={newPostVisible} transparent animationType="fade">
-          <View style={styles.menuContainer}>
-            <View style={styles.menuBox}>
-              <Text style={styles.menuTitle}>Crear Publicación</Text>
-              <TextInput
-                style={[styles.commentInput, { height: 80, textAlignVertical: 'top' }]}
-                placeholder="¿Qué mascota estás buscando o quieres reportar?"
-                placeholderTextColor="#888"
-                multiline
-                value={newText}
-                onChangeText={setNewText}
-              />
-              <TextInput
-                style={styles.commentInput}
-                placeholder="URL de la imagen (opcional)"
-                placeholderTextColor="#888"
-                value={newImage}
-                onChangeText={setNewImage}
-              />
-              <TouchableOpacity style={[styles.commentButton, { backgroundColor: '#3A9FD9', padding: 12, alignItems: 'center', borderRadius: 8, marginTop: 10 }]} onPress={publishPost}>
-                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Publicar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.closeMenu} onPress={() => setNewPostVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+              
+              <TouchableOpacity 
+                style={styles.modalCloseAbsolute} 
+                onPress={() => setNewPostVisible(false)}
+              >
                 <Ionicons name="close" size={22} color="#555" />
               </TouchableOpacity>
+
+              <Text style={styles.modalTitleText}>Crear Publicación</Text>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>¿Qué quieres compartir?</Text>
+                <TextInput
+                  style={styles.textAreaInput}
+                  placeholder="¿Qué mascota estás buscando o quieres reportar?"
+                  placeholderTextColor="#888"
+                  multiline
+                  value={newText}
+                  onChangeText={setNewText}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Imagen (Opcional)</Text>
+                <TextInput
+                  style={styles.textInputSingle}
+                  placeholder="URL de la imagen"
+                  placeholderTextColor="#888"
+                  value={newImage}
+                  onChangeText={setNewImage}
+                />
+              </View>
+
+              <TouchableOpacity style={styles.publishButton} onPress={publishPost}>
+                <Text style={styles.publishButtonText}>Publicar</Text>
+              </TouchableOpacity>
+
             </View>
           </View>
         </Modal>

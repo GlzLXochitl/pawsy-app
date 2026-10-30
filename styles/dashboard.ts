@@ -148,7 +148,7 @@ export const styles = StyleSheet.create({
     marginLeft: 8,
   },
   
-  // la barra que esta abajo 
+  
   bottomNav: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -178,7 +178,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // es lo mismo que el menu 
+ 
   menuContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -213,6 +213,90 @@ export const styles = StyleSheet.create({
     alignSelf: 'center',
     marginTop: 15,
   },
+  
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalBox: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    padding: 20,
+    position: 'relative',
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalCloseAbsolute: {
+    position: 'absolute',
+    right: 15,
+    top: 15,
+    zIndex: 10,
+    padding: 5,
+  },
+  modalTitleText: {
+    textAlign: 'center',
+    marginBottom: 20,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  inputGroup: {
+    marginBottom: 15,
+  },
+  inputLabel: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 6,
+    fontWeight: '600',
+  },
+  textAreaInput: {
+    height: 100,
+    textAlignVertical: 'top',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingTop: 12,
+    backgroundColor: '#F9F9F9',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    width: '100%',
+    color: '#333',
+  },
+  textInputSingle: {
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 45,
+    backgroundColor: '#F9F9F9',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    width: '100%',
+    color: '#333',
+  },
+  publishButton: {
+    backgroundColor: '#3A9FD9',
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    marginTop: 5,
+  },
+  publishButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+
 
   
 
