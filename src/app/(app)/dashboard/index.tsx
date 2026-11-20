@@ -1,329 +1,353 @@
-import { Fredoka_700Bold, useFonts } from '@expo-google-fonts/fredoka';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
-  Image,
-  Modal,
+  ActivityIndicator,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { styles } from '../../../../styles/dashboard';
 import { useAuth } from '../../../context/auth-context';
+import { useProfile } from '../../../context/ProfileContext';
 
-export default function Dashboard() {
-  const [fontsLoaded] = useFonts({ Fredoka_700Bold });
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [newPostVisible, setNewPostVisible] = useState(false);
-  const [commentDrafts, setCommentDrafts] = useState<Record<number, string>>({});
-  
-  const [visibleComments, setVisibleComments] = useState<Record<number, boolean>>({});
+const API_URL = 'http://localhost:3000';
 
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      user: 'Carlos Ramírez (Escuela Canina)',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-      time: 'Hace 30 minutos · 📍 Aguascalientes',
-      text: '¡Hola a todos! 🐕🐾 Ofrezco servicios de escuela para perros y adiestramiento positivo. ¡Ayuda a tu lomito a tener un mejor comportamiento! Contáctame por mensaje.',
-      image: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600',
-      likes: 25,
-      comments: ['¡Me interesa mucho!', '¿Cuáles son tus horarios?'] as string[],
-    },
-    {
-      id: 2,
-      user: 'diego fernando',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
-      time: 'Hace 1 hora · 📍 en el ita',
-      text: 'Se perdió un perro pastor alemán, si lo ven avisen por favor.',
-      image: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600',
-      likes: 12,
-      comments: ['lo encontré ayer'] as string[],
-    },
-    {
-      id: 3,
-      user: 'Isabel López',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-      time: 'Hace 2 horas · 📍 colonia méxico',
-      text: 'Se perdió ayer en el parque del Santo un perrito chihuahua de color café.',
-      image: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=600',
-      likes: 5,
-      comments: [] as string[],
-    },
-  ]);
+type Publicacion = {
+  id: number;
+  usuario_id: number;
+  mascota_id?: number | null;
+  titulo?: string;
+  descripcion?: string | null;
+  imagen?: string | null;
+  estado?: string;
+  likes_count?: number;
+  comentarios_count?: number;
+  fecha_creacion?: string;
+};
 
-  const { signOut } = useAuth();
+export default function DashboardScreen() {
+  const { user, signOut } = useAuth();
+  const { refreshProfile } = useProfile();
 
-  const toggleMenu = () => setMenuVisible(visible => !visible);
+  const [publicaciones, setPublicaciones] = useState<Publicacion[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [likedIds, setLikedIds] = useState<Record<number, boolean>>({});
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
-  const addLike = (id: number) => {
-    setPosts(posts.map(p => p.id === id ? { ...p, likes: p.likes + 1 } : p));
-  };
+  const cargarPublicaciones = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const endpoint = user?.id
+        ? `${API_URL}/api/usuarios/${user.id}/publicaciones`
+        : `${API_URL}/api/publicaciones`;
 
-  const addComment = (id: number, comment: string) => {
-    if (comment.trim() === '') return;
-    setPosts(posts.map(p =>
-      p.id === id ? { ...p, comments: [...p.comments, comment] } : p
-    ));
-  };
+      const res = await fetch(endpoint);
+      if (!res.ok) {
+        throw new Error(`Error ${res.status} al cargar publicaciones`);
+      }
+      const data = await res.json();
+      setPublicaciones(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      setError(err?.message || 'No se pudieron cargar las publicaciones');
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
 
-  const toggleComments = (id: number) => {
-    setVisibleComments(prev => ({
+  useFocusEffect(
+    useCallback(() => {
+      refreshProfile();
+      cargarPublicaciones();
+    }, [refreshProfile, cargarPublicaciones])
+  );
+
+  const toggleLike = (id: number) => {
+    setLikedIds((prev) => ({
       ...prev,
       [id]: !prev[id],
     }));
   };
 
-  const [newText, setNewText] = useState('');
-  const [newImage, setNewImage] = useState('');
-
-  const publishPost = () => {
-    if (newText.trim() === '') return;
-    const newPost = {
-      id: posts.length + 1,
-      user: 'Usuario Actual',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
-      time: 'Hace un momento',
-      text: newText,
-      image: newImage || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600',
-      likes: 0,
-      comments: [] as string[],
-    };
-    setPosts([newPost, ...posts]);
-    setNewText('');
-    setNewImage('');
-    setNewPostVisible(false);
+  const handleCerrarSesion = () => {
+    setMenuOpen(false);
+    signOut();
+    router.replace('/(auth)/sign-in' as any);
   };
-
-  const porfilePress = () => {
-    setMenuVisible(false);
-    router.push('/profile');
-  };
-
-  if (!fontsLoaded) return null;
 
   return (
-    <LinearGradient
-      colors={['#D4E157', '#7ED9A8', '#5FC9C0', '#4FB6D6']}
-      locations={[0, 0.35, 0.65, 1]}
-      start={{ x: 0.15, y: 0 }}
-      end={{ x: 0.85, y: 1 }}
-      style={styles.container}
-    >
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        
-        
-        <View style={styles.header}>
-          <View style={{ 
-            flexDirection: 'row', 
-            alignItems: 'center', 
-            backgroundColor: '#FFF', 
-            paddingHorizontal: 12, 
-            paddingVertical: 6, 
-            borderRadius: 14,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 3,
-            elevation: 3
-          }}>
-            <Image 
-             source={require('../../../img/pawsy-logo.png')}
-             style={{ width: 28, height: 28, marginRight: 6, resizeMode: 'contain' }} 
-            />
-            <Text style={[styles.appName, { color: '#3A9FD9' }]}>PAWSY</Text>
-          </View>
-          
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity onPress={() => setNewPostVisible(true)} style={{ marginRight: 15 }}>
-              <Ionicons name="notifications-outline" size={24} color="#FFF" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={toggleMenu} style={styles.menuButton}>
-              <Ionicons name="menu" size={24} color="#FFF" />
-            </TouchableOpacity>
-          </View>
+    <View style={{ flex: 1, backgroundColor: '#f4f6f5' }}>
+      {/* Encabezado superior con degradado suave */}
+      <View
+        style={{
+          backgroundColor: '#9be59c',
+          paddingTop: 18,
+          paddingBottom: 18,
+          paddingHorizontal: 18,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottomLeftRadius: 16,
+          borderBottomRightRadius: 16,
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: '#fff',
+            paddingHorizontal: 14,
+            paddingVertical: 6,
+            borderRadius: 16,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <Text style={{ fontSize: 16 }}>🐾</Text>
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: '900',
+              color: '#1e6bd6',
+              letterSpacing: 0.5,
+            }}
+          >
+            PAWSY
+          </Text>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
-          {posts.map(post => {
-            const isCommentsOpen = !!visibleComments[post.id];
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+          <TouchableOpacity
+            onPress={() => cargarPublicaciones()}
+            accessibilityLabel="Notificaciones"
+          >
+            <Text style={{ fontSize: 22, color: '#fff' }}>🔔</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setMenuOpen((prev) => !prev)}
+            accessibilityLabel="Menú"
+          >
+            <Text style={{ fontSize: 24, color: '#fff', fontWeight: 'bold' }}>
+              ☰
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Menú desplegable rápido */}
+      {menuOpen && (
+        <View
+          style={{
+            backgroundColor: '#fff',
+            marginHorizontal: 16,
+            marginTop: 8,
+            padding: 12,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: '#e0e0e0',
+            gap: 8,
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => {
+              setMenuOpen(false);
+              router.push('/(app)/profile' as any);
+            }}
+          >
+            <Text style={{ fontSize: 15, fontWeight: '600', color: '#222' }}>
+              Ver mi perfil
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={handleCerrarSesion}>
+            <Text style={{ fontSize: 15, fontWeight: '600', color: '#c0392b' }}>
+              Cerrar sesión
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Feed de publicaciones */}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 90, gap: 14 }}
+      >
+        {loading ? (
+          <View
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: 14,
+              padding: 32,
+              alignItems: 'center',
+            }}
+          >
+            <ActivityIndicator size="small" color="#2b7de9" />
+          </View>
+        ) : error ? (
+          <View
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: 14,
+              padding: 20,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: '#c0392b', textAlign: 'center' }}>{error}</Text>
+          </View>
+        ) : publicaciones.length === 0 ? (
+          <View
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: 14,
+              padding: 24,
+              minHeight: 220,
+              justifyContent: 'space-between',
+            }}
+          >
+            <Text style={{ color: '#777', fontSize: 15 }}>
+              No hay publicaciones para mostrar todavía.
+            </Text>
+
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: 20,
+              }}
+            >
+              <Text style={{ fontSize: 15, color: '#555' }}>🩷 0</Text>
+              <Text style={{ fontSize: 14, color: '#666' }}>0 comentarios</Text>
+            </View>
+          </View>
+        ) : (
+          publicaciones.map((pub) => {
+            const isLiked = !!likedIds[pub.id];
+            const baseLikes = pub.likes_count ?? 0;
+            const totalLikes = isLiked ? baseLikes + 1 : baseLikes;
+            const totalComments = pub.comentarios_count ?? 0;
 
             return (
-              <View key={post.id} style={styles.postCard}>
-                <View style={styles.postHeader}>
-                  <Image source={{ uri: post.avatar }} style={styles.avatar} />
-                  <View>
-                    <Text style={styles.userName}>{post.user}</Text>
-                    <Text style={styles.postTime}>{post.time}</Text>
-                  </View>
-                </View>
-
-                <Text style={styles.postText}>{post.text}</Text>
-
-                {post.image ? (
-                  <Image source={{ uri: post.image }} style={styles.postImage} />
-                ) : null}
-
-                <View style={styles.statsRow}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text>❤️</Text>
-                    <Text style={styles.statsText}> {post.likes}</Text>
-                  </View>
-                  <Text style={styles.statsText}>{post.comments.length} comentarios</Text>
-                </View>
-
-                <View style={styles.actionButtonsRow}>
-                  <TouchableOpacity onPress={() => addLike(post.id)} style={styles.actionBtn}>
-                    <Ionicons name="heart-outline" size={20} color="#666" />
-                    <Text style={styles.actionBtnText}>Me gusta</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity onPress={() => toggleComments(post.id)} style={styles.actionBtn}>
-                    <Ionicons name="chatbubble-outline" size={20} color="#666" />
-                    <Text style={styles.actionBtnText}>Comentar</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {isCommentsOpen && (
-                  <View style={styles.commentsSection}>
-                    {post.comments.map((c, i) => (
-                      <View key={i} style={styles.commentBubble}>
-                        <Text style={styles.commentUser}>Usuario</Text>
-                        <Text style={styles.commentText}>{c}</Text>
-                      </View>
-                    ))}
-
-                    <View style={styles.commentInputRow}>
-                      <Image source={{ uri: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100' }} style={styles.smallAvatar} />
-                      <TextInput
-                        style={styles.commentInput}
-                        placeholder="Escribe un comentario..."
-                        placeholderTextColor="#888"
-                        value={commentDrafts[post.id] ?? ''}
-                        onChangeText={comment => setCommentDrafts(drafts => ({
-                          ...drafts,
-                          [post.id]: comment,
-                        }))}
-                      />
-                      <TouchableOpacity
-                        style={styles.commentButton}
-                        onPress={() => {
-                          addComment(post.id, commentDrafts[post.id] ?? '');
-                          setCommentDrafts(drafts => ({ ...drafts, [post.id]: '' }));
-                        }}
-                      >
-                        <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Enviar</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
-              </View>
-            );
-          })}
-        </ScrollView>
-
-        
-        <View style={styles.bottomNav}>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(app)/dashboard')}>
-            <Ionicons name="home" size={24} color="#3A9FD9" />
-            <Text style={[styles.navText, { color: '#3A9FD9' }]}>Inicio</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/(app)/dashboard')}>
-            <Ionicons name="search-outline" size={24} color="#666" />
-            <Text style={styles.navText}>Buscar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => setNewPostVisible(true)}>
-            <View style={styles.addNavButton}>
-              <Ionicons name="add" size={24} color="#FFF" />
-            </View>
-            <Text style={styles.navText}>Crear</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={porfilePress}>
-            <Ionicons name="person-outline" size={24} color="#666" />
-            <Text style={styles.navText}>Perfil</Text>
-          </TouchableOpacity>
-        </View>
-
-        
-        <Modal visible={menuVisible} transparent animationType="slide">
-          <View style={styles.menuContainer}>
-            <View style={styles.menuBox}>
-              <TouchableOpacity onPress={toggleMenu} style={styles.menuCloseButton}>
-                <Ionicons name="close" size={24} color="#555" />
-              </TouchableOpacity>
-              <Text style={styles.menuTitle}>Menú</Text>
-              <TouchableOpacity onPress={porfilePress} style={styles.menuItem}>
-                <Ionicons name="person-outline" size={21} color="#3A9FD9" />
-                <Text style={styles.menuItemText}>Perfil</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => {
-                  setMenuVisible(false);
-                  setNewPostVisible(true);
+              <View
+                key={pub.id}
+                style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 14,
+                  padding: 18,
+                  borderWidth: 1,
+                  borderColor: '#eaeaea',
                 }}
               >
-                <Ionicons name="add-circle-outline" size={21} color="#3A9FD9" />
-                <Text style={styles.menuItemText}>Publicar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.menuItem} onPress={signOut}>
-                <Ionicons name="log-out-outline" size={21} color="#3A9FD9" />
-                <Text style={styles.menuItemText}>Cerrar sesión</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+                {pub.titulo ? (
+                  <Text
+                    style={{
+                      fontSize: 17,
+                      fontWeight: 'bold',
+                      color: '#222',
+                      marginBottom: 6,
+                    }}
+                  >
+                    {pub.titulo}
+                  </Text>
+                ) : null}
 
-        
-        <Modal visible={newPostVisible} transparent animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalBox}>
-              
-              <TouchableOpacity 
-                style={styles.modalCloseAbsolute} 
-                onPress={() => setNewPostVisible(false)}
-              >
-                <Ionicons name="close" size={22} color="#555" />
-              </TouchableOpacity>
+                {pub.descripcion ? (
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      color: '#444',
+                      lineHeight: 21,
+                      marginBottom: 14,
+                    }}
+                  >
+                    {pub.descripcion}
+                  </Text>
+                ) : null}
 
-              <Text style={styles.modalTitleText}>Crear Publicación</Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginTop: 8,
+                  }}
+                >
+                  <TouchableOpacity onPress={() => toggleLike(pub.id)}>
+                    <Text style={{ fontSize: 15, color: '#444' }}>
+                      {isLiked ? '❤️' : '🩷'} {totalLikes}
+                    </Text>
+                  </TouchableOpacity>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>¿Qué quieres compartir?</Text>
-                <TextInput
-                  style={styles.textAreaInput}
-                  placeholder="¿Qué mascota estás buscando o quieres reportar?"
-                  placeholderTextColor="#888"
-                  multiline
-                  value={newText}
-                  onChangeText={setNewText}
-                />
+                  <Text style={{ fontSize: 14, color: '#666' }}>
+                    {totalComments}{' '}
+                    {totalComments === 1 ? 'comentario' : 'comentarios'}
+                  </Text>
+                </View>
               </View>
+            );
+          })
+        )}
+      </ScrollView>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Imagen (Opcional)</Text>
-                <TextInput
-                  style={styles.textInputSingle}
-                  placeholder="URL de la imagen"
-                  placeholderTextColor="#888"
-                  value={newImage}
-                  onChangeText={setNewImage}
-                />
-              </View>
+      {/* Barra inferior */}
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: '#fff',
+          borderTopWidth: 1,
+          borderTopColor: '#e5e5e5',
+          paddingVertical: 10,
+          paddingHorizontal: 20,
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          alignItems: 'center',
+        }}
+      >
+        <TouchableOpacity
+          style={{ alignItems: 'center' }}
+          onPress={() => cargarPublicaciones()}
+        >
+          <Text style={{ fontSize: 20 }}>🏠</Text>
+          <Text style={{ fontSize: 12, color: '#2b7de9', fontWeight: '600' }}>
+            Inicio
+          </Text>
+        </TouchableOpacity>
 
-              <TouchableOpacity style={styles.publishButton} onPress={publishPost}>
-                <Text style={styles.publishButtonText}>Publicar</Text>
-              </TouchableOpacity>
+        <TouchableOpacity
+          style={{ alignItems: 'center' }}
+          onPress={() => cargarPublicaciones()}
+        >
+          <Text style={{ fontSize: 20 }}>🔍</Text>
+          <Text style={{ fontSize: 12, color: '#555' }}>Buscar</Text>
+        </TouchableOpacity>
 
-            </View>
-          </View>
-        </Modal>
-      </SafeAreaView>
-    </LinearGradient>
+        <TouchableOpacity
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: '#2b7de9',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          onPress={() => router.push('/(app)/profile' as any)}
+          accessibilityLabel="Crear"
+        >
+          <Text style={{ color: '#fff', fontSize: 24, lineHeight: 26 }}>+</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{ alignItems: 'center' }}
+          onPress={() => router.push('/(app)/profile' as any)}
+        >
+          <Text style={{ fontSize: 20 }}>👤</Text>
+          <Text style={{ fontSize: 12, color: '#555' }}>Perfil</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }

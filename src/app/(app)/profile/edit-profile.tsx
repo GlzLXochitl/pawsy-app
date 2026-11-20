@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useProfile } from '../../../context/ProfileContext';
 
@@ -14,15 +15,32 @@ export default function EditProfile() {
   const [nombre, setNombre] = useState(profile.nombre);
   const [usuario, setUsuario] = useState(profile.usuario);
   const [ubicacion, setUbicacion] = useState(profile.ubicacion);
+  const [guardando, setGuardando] = useState(false);
 
-  const guardarCambios = () => {
-    updateProfile({
+  useEffect(() => {
+    setNombre(profile.nombre);
+    setUsuario(profile.usuario);
+    setUbicacion(profile.ubicacion);
+  }, [profile]);
+
+  const irAlDashboard = () => {
+    router.replace('/dashboard' as any);
+  };
+
+  const guardarCambios = async () => {
+    setGuardando(true);
+    const ok = await updateProfile({
       nombre,
       usuario,
       ubicacion,
     });
+    setGuardando(false);
 
-    router.back();
+    if (ok) {
+      irAlDashboard();
+    } else {
+      Alert.alert('Error', 'No se pudieron guardar los cambios en el servidor.');
+    }
   };
 
   return (
@@ -33,17 +51,55 @@ export default function EditProfile() {
         padding: 20,
       }}
     >
-      <Text
+      {/* Barra superior con flecha para volver al dashboard */}
+      <View
         style={{
-          fontSize: 28,
-          fontWeight: 'bold',
-          color: '#222',
-          marginTop: 30,
-          marginBottom: 25,
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginTop: 25,
+          marginBottom: 20,
         }}
       >
-        Editar perfil
-      </Text>
+        <TouchableOpacity
+          onPress={irAlDashboard}
+          disabled={guardando}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+            backgroundColor: '#fff',
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: '#ddd',
+            marginRight: 12,
+          }}
+        >
+          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222' }}>
+            ←
+          </Text>
+          <Text
+            style={{
+              fontSize: 15,
+              fontWeight: '600',
+              color: '#222',
+              marginLeft: 6,
+            }}
+          >
+            Dashboard
+          </Text>
+        </TouchableOpacity>
+
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: 'bold',
+            color: '#222',
+          }}
+        >
+          Editar perfil
+        </Text>
+      </View>
 
       <Text
         style={{
@@ -126,13 +182,14 @@ export default function EditProfile() {
 
       <TouchableOpacity
         style={{
-          backgroundColor: '#007bff',
+          backgroundColor: guardando ? '#7aaee8' : '#007bff',
           padding: 15,
           borderRadius: 10,
           alignItems: 'center',
           marginBottom: 15,
         }}
         onPress={guardarCambios}
+        disabled={guardando}
       >
         <Text
           style={{
@@ -141,7 +198,7 @@ export default function EditProfile() {
             fontWeight: 'bold',
           }}
         >
-          Guardar cambios
+          {guardando ? 'Guardando...' : 'Guardar cambios'}
         </Text>
       </TouchableOpacity>
 
@@ -152,7 +209,8 @@ export default function EditProfile() {
           borderRadius: 10,
           alignItems: 'center',
         }}
-        onPress={() => router.back()}
+        onPress={irAlDashboard}
+        disabled={guardando}
       >
         <Text
           style={{

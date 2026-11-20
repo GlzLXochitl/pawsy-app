@@ -1,28 +1,71 @@
-import { createContext, useContext, useState, type PropsWithChildren } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 
-type AuthContextType = {
+export interface UsuarioAuth {
+  id: number;
+  nombre_usuario: string;
+}
+
+interface AuthContextType {
+  user: UsuarioAuth | null;
   isLoggedIn: boolean;
-  signIn: () => void;
+  signIn: (userData: UsuarioAuth) => void;
   signOut: () => void;
-};
+}
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const STORAGE_KEY = '@pawsy_auth_user';
 
-export function AuthProvider({ children }: PropsWithChildren) {
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  isLoggedIn: false,
+  signIn: () => {},
+  signOut: () => {},
+});
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<UsuarioAuth | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const signIn = () => setIsLoggedIn(true);
-  const signOut = () => setIsLoggedIn(false);
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      try {
+        const saved = window.localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed: UsuarioAuth = JSON.parse(saved);
+          if (parsed?.id) {
+            setUser(parsed);
+            setIsLoggedIn(true);
+          }
+        }
+      } catch (e) {
+        console.error('Error leyendo sesión:', e);
+      }
+    }
+  }, []);
+
+  const signIn = (userData: UsuarioAuth) => {
+    setUser(userData);
+    setIsLoggedIn(true);
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+    }
+  };
+
+  const signOut = () => {
+    setUser(null);
+    setIsLoggedIn(false);
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
+  };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, isLoggedIn, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth debe usarse dentro de AuthProvider');
-  return ctx;
+  return useContext(AuthContext);
 }

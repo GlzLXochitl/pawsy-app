@@ -1,23 +1,15 @@
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
+import { Stack } from 'expo-router';
 import { AuthProvider } from '../context/auth-context';
+import { ProfileProvider } from '../context/ProfileContext';
 
-SplashScreen.preventAutoHideAsync();
+const SCREEN_OPTIONS = { headerShown: false };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
-  useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
-
   return (
     <AuthProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false }} />
-      </ThemeProvider>
+      <ProfileProvider>
+        <Stack screenOptions={SCREEN_OPTIONS} />
+      </ProfileProvider>
     </AuthProvider>
   );
 }

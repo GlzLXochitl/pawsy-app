@@ -11,4 +11,4 @@ if (!configuredApiUrl && !apiHost) {
   throw new Error('No se pudo determinar la dirección del servidor. Define EXPO_PUBLIC_API_URL.');
 }
 
-export const API_BASE_URL = (configuredApiUrl ?? `http://${apiHost}:3000`).replace(/\/$/, '');
+export const API_BASE_URL = 'http://localhost:3000';

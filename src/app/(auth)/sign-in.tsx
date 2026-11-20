@@ -15,12 +15,13 @@ import {
 } from 'react-native';
 import { shared } from '../../../styles/shared';
 import { styles } from '../../../styles/sign-in';
-import { API_BASE_URL } from '../../config/api';
 import { useAuth } from '../../context/auth-context';
+
+export const API_BASE_URL = 'http://127.0.0.1:3000';
 
 export default function SignIn() {
   const [fontsLoaded] = useFonts({ Fredoka_700Bold });
-  
+
   const [nombreUsuario, setNombreUsuario] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [mostrarContrasena, setMostrarContrasena] = useState(false);
@@ -29,16 +30,18 @@ export default function SignIn() {
 
   if (!fontsLoaded) return null;
 
-  // Función asíncrona para consultar a la base de datos vía Node.js
   const iniciarSesion = async () => {
+    console.log('1. Botón presionado');
     setError('');
 
     if (!nombreUsuario.trim() || !contrasena) {
+      console.log('2. Campos vacíos');
       setError('Por favor llena todos los campos');
       return;
     }
 
     try {
+      console.log('3. Enviando POST a:', `${API_BASE_URL}/api/login`);
       const respuesta = await fetch(`${API_BASE_URL}/api/login`, {
         method: 'POST',
         headers: {
@@ -50,16 +53,21 @@ export default function SignIn() {
         }),
       });
 
+      console.log('4. Status de respuesta:', respuesta.status);
       const datos = await respuesta.json();
+      console.log('5. Datos recibidos:', datos);
 
       if (respuesta.ok) {
-        signIn(); // Cambia el estado global a autenticado
-        router.replace('/dashboard'); // Redirige  al Dashboard
+        const usuarioLogueado = datos.usuario || datos.user || datos;
+        console.log('6. Llamando signIn con:', usuarioLogueado);
+        signIn(usuarioLogueado);
+        console.log('7. Navegando a /dashboard');
+        router.replace('/(app)/dashboard');
       } else {
         setError(datos.error || 'Usuario o contraseña incorrectos');
       }
     } catch (err) {
-      console.error(err);
+      console.error('8. Error en fetch/catch:', err);
       setError('No se pudo conectar con el servidor');
     }
   };
@@ -146,6 +154,7 @@ export default function SignIn() {
               <Text style={styles.signupLink}>registrate aqui!</Text>
             </TouchableOpacity>
           </View>
+
         </ScrollView>
       </KeyboardAvoidingView>
     </LinearGradient>
