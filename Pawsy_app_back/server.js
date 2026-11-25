@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const pool = require('./db'); 
 
 const app = express();
@@ -7,6 +8,8 @@ const app = express();
 // Middlewares
 app.use(cors());
 app.use(express.json());
+app.use('/profile-images', express.static(path.join(__dirname, '..', 'server', 'resources', 'profile-images')));
+app.use('/comment-images', express.static(path.join(__dirname, '..', 'server', 'resources', 'comment-images')));
 
 // IMPORTACIÓN DE RUTAS MODULARIZADAS
 const inicioSesionRoutes = require('./routes/inicio-sesion');

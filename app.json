@@ -21,9 +21,8 @@
       "package": "com.anonymous.pawsyapp"
     },
     "web": {
-  "output": "single",
-  "favicon": "./assets/images/favicon.png"
-}
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
     },
     "updates": {
       "enabled": false
@@ -39,6 +38,12 @@
         }
       ],
       "expo-image",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Pawsy usa tu ubicación para mostrar avisos cercanos y publicar desde el lugar que elijas."
+        }
+      ],
       "expo-web-browser",
       "expo-font"
     ],
@@ -47,4 +52,5 @@
       "reactCompiler": true
     }
   }
+}
 

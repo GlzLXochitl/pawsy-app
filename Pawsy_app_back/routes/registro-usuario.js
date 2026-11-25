@@ -58,48 +58,59 @@ router.get('/:id', (req, res) => {
 
 // <<<<<<<< ACTUALIZAR PERFIL: PUT /api/usuarios/:id
 router.put('/:id', (req, res) => {
-  const { id } = req.params;
-  const {
-    nombre_usuario,
-    foto_perfil,
-    nombre,
-    apellidos,
-    email,
-    celular,
-    ciudad,
-    colonia,
-    calle,
-  } = req.body || {};
+  const id = Number(req.params.id);
+  const cuerpo = req.body || {};
+  const columnas = {
+    nombre_usuario: 'nombre_usuario',
+    foto_perfil: 'foto_perfil',
+    nombre: 'nombre',
+    apellidos: 'apellidos',
+    email: 'email',
+    celular: 'celular',
+    ciudad: 'ciudad',
+    colonia: 'colonia',
+    calle: 'calle',
+  };
+  const opcionales = new Set(['foto_perfil', 'celular', 'calle']);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: 'El id de usuario no es válido' });
+  }
+
+  const cambios = Object.entries(columnas)
+    .filter(([campo]) => cuerpo[campo] !== undefined)
+    .map(([campo, columna]) => {
+      const valor = cuerpo[campo];
+      if (valor === null && opcionales.has(campo)) {
+        return { columna, valor: null };
+      }
+      if (typeof valor !== 'string') {
+        return { error: `${campo} debe ser texto` };
+      }
+      const limpio = valor.trim();
+      if (!limpio && !opcionales.has(campo)) {
+        return { error: `${campo} no puede estar vacío` };
+      }
+      return { columna, valor: limpio || null };
+    });
+
+  const errorValidacion = cambios.find((cambio) => cambio.error);
+  if (errorValidacion) {
+    return res.status(400).json({ error: errorValidacion.error });
+  }
+  if (cambios.length === 0) {
+    return res.status(400).json({ error: 'No se recibieron cambios para actualizar' });
+  }
 
   const sqlUpdate = `
     UPDATE usuario
-    SET nombre_usuario = COALESCE(?, nombre_usuario),
-        foto_perfil = COALESCE(?, foto_perfil),
-        nombre = COALESCE(?, nombre),
-        apellidos = COALESCE(?, apellidos),
-        email = COALESCE(?, email),
-        celular = COALESCE(?, celular),
-        ciudad = COALESCE(?, ciudad),
-        colonia = COALESCE(?, colonia),
-        calle = COALESCE(?, calle),
+    SET ${cambios.map((cambio) => `${cambio.columna} = ?`).join(', ')},
         fecha_actualizacion = CURRENT_TIMESTAMP
     WHERE id = ?
   `;
+  const valores = [...cambios.map((cambio) => cambio.valor), id];
 
-  const valores = [
-    nombre_usuario ? nombre_usuario.trim() : null,
-    foto_perfil ? foto_perfil.trim() : null,
-    nombre ? nombre.trim() : null,
-    apellidos ? apellidos.trim() : null,
-    email ? email.trim() : null,
-    celular ? celular.trim() : null,
-    ciudad ? ciudad.trim() : null,
-    colonia ? colonia.trim() : null,
-    calle ? calle.trim() : null,
-    id,
-  ];
-
-  conexion.query(sqlUpdate, valores, (err, resultados) => {
+  conexion.query(sqlUpdate, valores, (err) => {
     if (err) {
       console.error('Error en MySQL al actualizar usuario:', err);
       if (err.code === 'ER_DUP_ENTRY') {
@@ -108,12 +119,9 @@ router.put('/:id', (req, res) => {
       return res.status(500).json({ error: 'Error en la base de datos al actualizar el perfil' });
     }
 
-    if (resultados.affectedRows === 0) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
-
     const sqlSelect = `
-      SELECT id, nombre_usuario, foto_perfil, nombre, apellidos, email, celular, ciudad, colonia, calle, fecha_actualizacion
+      SELECT id, nombre_usuario, foto_perfil, nombre, apellidos, email, celular,
+             ciudad, colonia, calle, fecha_actualizacion
       FROM usuario
       WHERE id = ?
     `;
@@ -123,12 +131,50 @@ router.put('/:id', (req, res) => {
         console.error('Error al consultar usuario actualizado:', errSelect);
         return res.status(500).json({ error: 'Perfil actualizado, pero error al consultar los datos' });
       }
+      if (rowsActualizados.length === 0) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
 
       res.json({
         mensaje: '¡Perfil actualizado con éxito!',
         usuario: rowsActualizados[0],
       });
     });
+  });
+});
+
+router.put('/:id/contrasena', (req, res) => {
+  const id = Number(req.params.id);
+  const { contrasena_actual: contrasenaActual, contrasena_nueva: contrasenaNueva } = req.body || {};
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: 'El id de usuario no es válido' });
+  }
+  if (typeof contrasenaActual !== 'string' || !contrasenaActual) {
+    return res.status(400).json({ error: 'Escribe tu contraseña actual' });
+  }
+  if (typeof contrasenaNueva !== 'string' || contrasenaNueva.length < 8 || contrasenaNueva.length > 25) {
+    return res.status(400).json({ error: 'La nueva contraseña debe tener entre 8 y 25 caracteres' });
+  }
+  if (contrasenaActual === contrasenaNueva) {
+    return res.status(400).json({ error: 'La nueva contraseña debe ser diferente a la actual' });
+  }
+
+  const sql = `
+    UPDATE usuario
+    SET contrasena = ?, fecha_actualizacion = CURRENT_TIMESTAMP
+    WHERE id = ? AND contrasena = ?
+  `;
+
+  conexion.query(sql, [contrasenaNueva, id, contrasenaActual], (err, resultado) => {
+    if (err) {
+      console.error('Error en MySQL al cambiar contraseña:', err);
+      return res.status(500).json({ error: 'No se pudo actualizar la contraseña' });
+    }
+    if (resultado.affectedRows === 0) {
+      return res.status(401).json({ error: 'La contraseña actual no es correcta' });
+    }
+    return res.json({ mensaje: 'La contraseña se actualizó correctamente' });
   });
 });
 

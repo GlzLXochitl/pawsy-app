@@ -16,8 +16,7 @@ import {
 import { shared } from '../../../styles/shared';
 import { styles } from '../../../styles/sign-in';
 import { useAuth } from '../../context/auth-context';
-
-export const API_BASE_URL = 'http://127.0.0.1:3000';
+import { API_BASE_URL } from '../../config/api';
 
 export default function SignIn() {
   const [fontsLoaded] = useFonts({ Fredoka_700Bold });
@@ -31,17 +30,14 @@ export default function SignIn() {
   if (!fontsLoaded) return null;
 
   const iniciarSesion = async () => {
-    console.log('1. Botón presionado');
     setError('');
 
     if (!nombreUsuario.trim() || !contrasena) {
-      console.log('2. Campos vacíos');
       setError('Por favor llena todos los campos');
       return;
     }
 
     try {
-      console.log('3. Enviando POST a:', `${API_BASE_URL}/api/login`);
       const respuesta = await fetch(`${API_BASE_URL}/api/login`, {
         method: 'POST',
         headers: {
@@ -53,15 +49,11 @@ export default function SignIn() {
         }),
       });
 
-      console.log('4. Status de respuesta:', respuesta.status);
       const datos = await respuesta.json();
-      console.log('5. Datos recibidos:', datos);
 
       if (respuesta.ok) {
         const usuarioLogueado = datos.usuario || datos.user || datos;
-        console.log('6. Llamando signIn con:', usuarioLogueado);
         signIn(usuarioLogueado);
-        console.log('7. Navegando a /dashboard');
         router.replace('/(app)/dashboard');
       } else {
         setError(datos.error || 'Usuario o contraseña incorrectos');

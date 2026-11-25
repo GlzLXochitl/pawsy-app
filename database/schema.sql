@@ -119,6 +119,8 @@ CREATE TABLE IF NOT EXISTS `pawsy_db`.`historial_ubicacion` (
   `colonia` VARCHAR(100) NOT NULL,
   `calle` VARCHAR(100) NULL DEFAULT NULL,
   `referencias` VARCHAR(255) NOT NULL,
+  `latitud` DECIMAL(10,8) NULL DEFAULT NULL,
+  `longitud` DECIMAL(11,8) NULL DEFAULT NULL,
   `fecha_creacion` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `fecha_actualizacion` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

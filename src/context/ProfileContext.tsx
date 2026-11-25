@@ -1,13 +1,16 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { useAuth } from './auth-context';
-
-const API_URL = 'http://localhost:3000';
+import { API_BASE_URL as API_URL } from '../config/api';
 
 export type ProfileData = {
   id?: number;
   nombre: string;
+  apellidos?: string;
   usuario: string;
   ubicacion: string;
+  email?: string;
+  celular?: string | null;
+  foto_perfil?: string | null;
   ciudad?: string | null;
   colonia?: string | null;
   calle?: string | null;
@@ -41,8 +44,12 @@ function mapearUsuario(row: any): ProfileData {
   return {
     id: row.id,
     nombre: row.nombre ?? '',
+    apellidos: row.apellidos ?? '',
     usuario: row.nombre_usuario ?? '',
     ubicacion: formatearUbicacion(row),
+    email: row.email ?? '',
+    celular: row.celular ?? null,
+    foto_perfil: row.foto_perfil ?? null,
     ciudad: row.ciudad ?? null,
     colonia: row.colonia ?? null,
     calle: row.calle ?? null,
@@ -94,23 +101,16 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
     setError(null);
     try {
-      const payload: Record<string, any> = {
+      const payload = {
         nombre: data.nombre,
+        apellidos: data.apellidos,
         nombre_usuario: data.usuario,
+        email: data.email,
+        celular: data.celular,
+        ciudad: data.ciudad,
+        colonia: data.colonia,
+        calle: data.calle,
       };
-
-      if (data.ciudad !== undefined) payload.ciudad = data.ciudad;
-      if (data.colonia !== undefined) payload.colonia = data.colonia;
-      if (data.calle !== undefined) payload.calle = data.calle;
-
-      if (
-        data.ubicacion !== undefined &&
-        data.ciudad === undefined &&
-        data.colonia === undefined &&
-        data.calle === undefined
-      ) {
-        payload.ciudad = data.ubicacion.trim() || null;
-      }
 
       const res = await fetch(`${API_URL}/api/usuarios/${userId}`, {
         method: 'PUT',
@@ -119,13 +119,14 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!res.ok) {
-        throw new Error(`Error ${res.status} al actualizar el perfil`);
+        const response = await res.json();
+        throw new Error(response.error || `Error ${res.status} al actualizar el perfil`);
       }
 
       await refreshProfile();
       return true;
-    } catch (err: any) {
-      setError(err?.message || 'No se pudieron guardar los cambios');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudieron guardar los cambios');
       return false;
     }
   };
