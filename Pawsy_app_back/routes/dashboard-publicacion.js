@@ -97,11 +97,29 @@ router.post('/publicaciones', (req, res) => {
           });
         }
 
-        return res.status(201).json({
-          mensaje: '¡Publicación creada con éxito!',
-          id: publicacionId,
-          imagen: imagenFinal
-        });
+        const mensajeNotificacion = `Tu publicación "${tituloFinal}" se publicó correctamente.`;
+        conexion.query(
+          `INSERT INTO notificacion (usuario_id, tipo, publicacion_id, mensaje)
+           VALUES (?, 'publicacion_publicada', ?, ?)`,
+          [usuarioIdFinal, publicacionId, mensajeNotificacion],
+          (errorNotificacion) => {
+            if (errorNotificacion) {
+              console.error('Error al guardar la notificación de publicación:', errorNotificacion);
+              return conexion.query('DELETE FROM publicacion WHERE id = ?', [publicacionId], (errorLimpieza) => {
+                if (errorLimpieza) {
+                  console.error('Error al cancelar la publicación incompleta:', errorLimpieza);
+                }
+                return res.status(500).json({ error: 'No se pudo guardar la confirmación de publicación' });
+              });
+            }
+
+            return res.status(201).json({
+              mensaje: '¡Publicación creada con éxito!',
+              id: publicacionId,
+              imagen: imagenFinal
+            });
+          }
+        );
       }
     );
   });
@@ -229,7 +247,46 @@ router.post('/publicaciones/:id/like', (req, res) => {
           console.error('Error al registrar like:', err);
           return res.status(500).json({ error: 'Error al registrar like' });
         }
-        return res.json({ liked: true, message: 'Like registrado' });
+
+        conexion.query(
+          'SELECT usuario_id, titulo FROM publicacion WHERE id = ?',
+          [publicacion_id],
+          (errorPublicacion, publicaciones) => {
+            if (errorPublicacion) {
+              console.error('Error al consultar la publicación del like:', errorPublicacion);
+              return res.status(500).json({ error: 'Error al registrar like' });
+            }
+            if (publicaciones.length === 0 || Number(publicaciones[0].usuario_id) === usuario_id) {
+              return res.json({ liked: true, message: 'Like registrado' });
+            }
+
+            const tituloNotificacion = String(publicaciones[0].titulo).slice(0, 100);
+            const mensajeNotificacion = `Le gustó tu publicación "${tituloNotificacion}".`;
+            conexion.query(
+              `INSERT INTO notificacion
+                (usuario_id, actor_usuario_id, tipo, publicacion_id, mensaje)
+               VALUES (?, ?, 'like_publicacion', ?, ?)`,
+              [publicaciones[0].usuario_id, usuario_id, publicacion_id, mensajeNotificacion],
+              (errorNotificacion) => {
+                if (errorNotificacion) {
+                  console.error('Error al guardar la notificación de like:', errorNotificacion);
+                  return conexion.query(
+                    'DELETE FROM publicacion_likes WHERE publicacion_id = ? AND usuario_id = ?',
+                    [publicacion_id, usuario_id],
+                    (errorLimpieza) => {
+                      if (errorLimpieza) {
+                        console.error('Error al cancelar el like incompleto:', errorLimpieza);
+                      }
+                      return res.status(500).json({ error: 'No se pudo guardar la notificación del like' });
+                    }
+                  );
+                }
+
+                return res.json({ liked: true, message: 'Like registrado' });
+              }
+            );
+          }
+        );
       });
     }
   });
@@ -254,23 +311,169 @@ router.post('/publicaciones/:id/comentarios', (req, res) => {
   const descripcionFinal = descripcion.trim();
   const imagenFinal = limpiarTextoOpcional(imagen);
 
-  const query = 'INSERT INTO comentarios (usuario_id, publicacion_id, descripcion, imagen) VALUES (?, ?, ?, ?)';
+  conexion.query(
+    'SELECT usuario_id, titulo FROM publicacion WHERE id = ?',
+    [publicacion_id],
+    (errorPublicacion, publicaciones) => {
+      if (errorPublicacion) {
+        console.error('Error al consultar la publicación del comentario:', errorPublicacion);
+        return res.status(500).json({ error: 'Error al guardar el comentario' });
+      }
+      if (publicaciones.length === 0) {
+        return res.status(404).json({ error: 'La publicación no existe' });
+      }
 
-  conexion.query(query, [usuarioIdFinal, publicacion_id, descripcionFinal, imagenFinal], (error, result) => {
-    if (error) {
-      console.error('Error al guardar el comentario:', error);
-      return res.status(500).json({ error: 'Error al guardar el comentario' });
-    }
+      const publicacion = publicaciones[0];
+      const responderComentario = (comentarioId) => res.status(201).json({
+        id: comentarioId,
+        usuario_id: usuarioIdFinal,
+        publicacion_id,
+        descripcion: descripcionFinal,
+        imagen: imagenFinal,
+        mensaje: 'Comentario guardado con éxito'
+      });
 
-    return res.status(201).json({
-      id: result.insertId,
-      usuario_id: usuarioIdFinal,
-      publicacion_id,
-      descripcion: descripcionFinal,
-      imagen: imagenFinal,
-      mensaje: 'Comentario guardado con éxito'
+      conexion.query(
+        'INSERT INTO comentarios (usuario_id, publicacion_id, descripcion, imagen) VALUES (?, ?, ?, ?)',
+        [usuarioIdFinal, publicacion_id, descripcionFinal, imagenFinal],
+        (errorComentario, resultado) => {
+          if (errorComentario) {
+            console.error('Error al guardar el comentario:', errorComentario);
+            return res.status(500).json({ error: 'Error al guardar el comentario' });
+          }
+
+          if (Number(publicacion.usuario_id) === usuarioIdFinal) {
+            return responderComentario(resultado.insertId);
+          }
+
+          const tituloNotificacion = String(publicacion.titulo).slice(0, 90);
+          const textoNotificacion = descripcionFinal.slice(0, 125);
+          const mensajeNotificacion = `Nuevo comentario en "${tituloNotificacion}": ${textoNotificacion}`;
+          conexion.query(
+            `INSERT INTO notificacion
+              (usuario_id, actor_usuario_id, tipo, publicacion_id, mensaje)
+             VALUES (?, ?, 'comentario_publicacion', ?, ?)`,
+            [publicacion.usuario_id, usuarioIdFinal, publicacion_id, mensajeNotificacion],
+            (errorNotificacion) => {
+              if (errorNotificacion) {
+                console.error('Error al guardar la notificación de comentario:', errorNotificacion);
+                return conexion.query(
+                  'DELETE FROM comentarios WHERE id = ?',
+                  [resultado.insertId],
+                  (errorLimpieza) => {
+                    if (errorLimpieza) {
+                      console.error('Error al cancelar el comentario incompleto:', errorLimpieza);
+                    }
+                    return res.status(500).json({ error: 'No se pudo guardar la notificación del comentario' });
+                  }
+                );
+              }
+
+              return responderComentario(resultado.insertId);
+            }
+          );
+        }
+      );
     });
-  });
+});
+
+router.get('/notificaciones/resumen', (req, res) => {
+  const usuarioId = Number(req.query.usuario_id);
+  if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+    return res.status(400).json({ error: 'El id de usuario no es válido' });
+  }
+
+  conexion.query(
+    'SELECT COUNT(*) AS no_leidas FROM notificacion WHERE usuario_id = ? AND leida = 0',
+    [usuarioId],
+    (error, filas) => {
+      if (error) {
+        console.error('Error al contar notificaciones:', error);
+        return res.status(500).json({ error: 'No se pudieron cargar las notificaciones' });
+      }
+      return res.json({ noLeidas: Number(filas[0].no_leidas) });
+    }
+  );
+});
+
+router.get('/notificaciones', (req, res) => {
+  const usuarioId = Number(req.query.usuario_id);
+  if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+    return res.status(400).json({ error: 'El id de usuario no es válido' });
+  }
+
+  conexion.query(
+    `SELECT n.id, n.tipo, n.publicacion_id, n.mensaje, n.leida, n.fecha_creacion,
+            actor.nombre_usuario AS actor_nombre
+     FROM notificacion n
+     LEFT JOIN usuario actor ON actor.id = n.actor_usuario_id
+     WHERE n.usuario_id = ?
+     ORDER BY n.fecha_creacion DESC, n.id DESC
+     LIMIT 100`,
+    [usuarioId],
+    (error, filas) => {
+      if (error) {
+        console.error('Error al obtener notificaciones:', error);
+        return res.status(500).json({ error: 'No se pudieron cargar las notificaciones' });
+      }
+      return res.json(filas);
+    }
+  );
+});
+
+router.put('/notificaciones/leidas', (req, res) => {
+  const usuarioId = Number(req.body?.usuario_id);
+  if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+    return res.status(400).json({ error: 'El id de usuario no es válido' });
+  }
+
+  conexion.query(
+    'UPDATE notificacion SET leida = 1 WHERE usuario_id = ? AND leida = 0',
+    [usuarioId],
+    (error, resultado) => {
+      if (error) {
+        console.error('Error al marcar notificaciones como leídas:', error);
+        return res.status(500).json({ error: 'No se pudieron actualizar las notificaciones' });
+      }
+      return res.json({ actualizadas: resultado.affectedRows });
+    }
+  );
+});
+
+router.put('/notificaciones/:id/leida', (req, res) => {
+  const notificacionId = Number(req.params.id);
+  const usuarioId = Number(req.body?.usuario_id);
+  if (!Number.isInteger(notificacionId) || notificacionId <= 0 || !Number.isInteger(usuarioId) || usuarioId <= 0) {
+    return res.status(400).json({ error: 'Los datos de la notificación no son válidos' });
+  }
+
+  conexion.query(
+    'UPDATE notificacion SET leida = 1 WHERE id = ? AND usuario_id = ?',
+    [notificacionId, usuarioId],
+    (error, resultado) => {
+      if (error) {
+        console.error('Error al marcar notificación como leída:', error);
+        return res.status(500).json({ error: 'No se pudo actualizar la notificación' });
+      }
+      if (resultado.affectedRows === 0) {
+        return conexion.query(
+          'SELECT id FROM notificacion WHERE id = ? AND usuario_id = ?',
+          [notificacionId, usuarioId],
+          (errorConsulta, filas) => {
+            if (errorConsulta) {
+              console.error('Error al verificar la notificación:', errorConsulta);
+              return res.status(500).json({ error: 'No se pudo actualizar la notificación' });
+            }
+            if (filas.length === 0) {
+              return res.status(404).json({ error: 'No se encontró la notificación' });
+            }
+            return res.json({ leida: true });
+          }
+        );
+      }
+      return res.json({ leida: true });
+    }
+  );
 });
 
 // Obtener comentarios de una publicación

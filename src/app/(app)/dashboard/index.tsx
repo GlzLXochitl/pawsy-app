@@ -124,13 +124,22 @@ export default function DashboardScreen() {
     const previous = !!likedIds[postId];
     setLikedIds((prev) => ({ ...prev, [postId]: !previous }));
     try {
-      await fetch(`${API_URL}/api/publicaciones/${postId}/like`, {
+      const response = await fetch(`${API_URL}/api/publicaciones/${postId}/like`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ usuario_id: user.id }),
       });
-    } catch {
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'No se pudo registrar la reacción.');
+      }
+      setLikedIds((prev) => ({ ...prev, [postId]: !!result.liked }));
+    } catch (likeError) {
       setLikedIds((prev) => ({ ...prev, [postId]: previous }));
+      Alert.alert(
+        'No se pudo actualizar',
+        likeError instanceof Error ? likeError.message : 'Intenta dar like nuevamente.',
+      );
     }
   };
 
@@ -144,8 +153,10 @@ export default function DashboardScreen() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ usuario_id: user.id, descripcion }),
       });
-      if (!response.ok) return;
       const created = await response.json();
+      if (!response.ok) {
+        throw new Error(created.error || 'No se pudo guardar el comentario.');
+      }
       setComments((prev) => ({
         ...prev,
         [postId]: [
@@ -164,8 +175,11 @@ export default function DashboardScreen() {
       }));
       setOpenComments((prev) => ({ ...prev, [postId]: true }));
       setCommentDrafts((prev) => ({ ...prev, [postId]: '' }));
-    } catch {
-      // Conserva el borrador si falla el envío.
+    } catch (commentError) {
+      Alert.alert(
+        'No se pudo enviar',
+        commentError instanceof Error ? commentError.message : 'Intenta publicar tu comentario nuevamente.',
+      );
     }
   };
 

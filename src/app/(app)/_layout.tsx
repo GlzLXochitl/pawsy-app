@@ -4,15 +4,45 @@ import { Redirect, router, Stack, usePathname } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../../context/auth-context';
+import { API_BASE_URL } from '../../config/api';
 
 export default function AppLayout() {
-  const { isLoggedIn, signOut } = useAuth();
+  const { isLoggedIn, signOut, user } = useAuth();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setUnreadNotifications(0);
+      return;
+    }
+
+    let active = true;
+    const loadUnreadNotifications = async () => {
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/notificaciones/resumen?usuario_id=${user.id}`,
+        );
+        if (!response.ok) return;
+        const result = await response.json();
+        if (active) setUnreadNotifications(Number(result.noLeidas) || 0);
+      } catch {
+        // La bandeja muestra el error si no se pueden cargar las notificaciones.
+      }
+    };
+
+    void loadUnreadNotifications();
+    const interval = setInterval(() => void loadUnreadNotifications(), 15000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [user?.id]);
 
   if (!isLoggedIn) {
     return <Redirect href={'/sign-in' as any} />;
@@ -56,8 +86,31 @@ export default function AppLayout() {
           <Text style={{ color: '#fff', fontSize: 20, fontWeight: '900' }}>PAWSY</Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
-          <TouchableOpacity accessibilityLabel="Notificaciones">
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={unreadNotifications ? `Notificaciones, ${unreadNotifications} sin leer` : 'Notificaciones'}
+            onPress={() => router.push('/(app)/notifications' as any)}
+            style={{ position: 'relative' }}
+          >
             <Ionicons name="notifications-outline" size={23} color="#fff" />
+            {unreadNotifications > 0 ? (
+              <View style={{
+                position: 'absolute',
+                top: -7,
+                right: -9,
+                minWidth: 17,
+                height: 17,
+                borderRadius: 9,
+                backgroundColor: '#dc3545',
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingHorizontal: 3,
+              }}>
+                <Text style={{ color: '#fff', fontSize: 9, fontWeight: '800' }}>
+                  {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                </Text>
+              </View>
+            ) : null}
           </TouchableOpacity>
           <TouchableOpacity
             accessibilityRole="button"

@@ -132,12 +132,17 @@ export default function Profile() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ usuario_id: userId }),
       });
-      if (!response.ok) throw new Error(`Error ${response.status}`);
       const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || `Error ${response.status}`);
+      }
       setLikedIds((previous) => ({ ...previous, [postId]: !!result.liked }));
-    } catch {
+    } catch (likeError) {
       setLikedIds((previous) => ({ ...previous, [postId]: wasLiked }));
-      Alert.alert('No se pudo actualizar', 'Intenta dar like nuevamente.');
+      Alert.alert(
+        'No se pudo actualizar',
+        likeError instanceof Error ? likeError.message : 'Intenta dar like nuevamente.',
+      );
     }
   };
 
@@ -168,8 +173,10 @@ export default function Profile() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ usuario_id: userId, descripcion }),
       });
-      if (!response.ok) throw new Error(`Error ${response.status}`);
       const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || `Error ${response.status}`);
+      }
       const created: Comment = {
         id: result.id || Date.now(),
         usuario_id: userId,
@@ -183,8 +190,11 @@ export default function Profile() {
       }));
       setCommentDrafts((previous) => ({ ...previous, [postId]: '' }));
       setOpenComments((previous) => ({ ...previous, [postId]: true }));
-    } catch {
-      Alert.alert('No se pudo enviar', 'Intenta publicar tu comentario nuevamente.');
+    } catch (commentError) {
+      Alert.alert(
+        'No se pudo enviar',
+        commentError instanceof Error ? commentError.message : 'Intenta publicar tu comentario nuevamente.',
+      );
     }
   };
 
